@@ -1,9 +1,10 @@
-{
-  "baseUrl": "https://mainline.i3s.unice.fr/WebAudioPluginBank/",
-  "plugins": [
-    { "name": "ZitaRevV3", "path": "Faust/ZitaRevV3" },
-    { "name": "QuadraFuzz3", "path": "WASABI/QuadraFuzz3" },
-    { "name": "Blipper", "path": "Oliver-Larkin2/Blipper" },
-    { "name": "DualPitchShifter", "path": "Oliver-Larkin2/DualPitchShifter" }
-  ]
-}
+[
+  {
+    "name": "faustPingPongDelay",
+    "url": "https://mainline.i3s.unice.fr/wam2/packages/faustPingPongDelay/plugin/"
+  },
+  {
+    "name": "quadrafuzz",
+    "url": "https://mainline.i3s.unice.fr/wam2/packages/quadrafuzz/dist/"
+  }
+]

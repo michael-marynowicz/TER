@@ -1,6 +1,8 @@
-const player = document.querySelector("#soundSample");
+const player = document.querySelector("#player");
 const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
+
+const hostPlugins = {};
 
 // Safari...
 const AudioContext =
@@ -11,41 +13,73 @@ const AudioContext =
 const audioContext = new AudioContext();
 const mediaElementSource = audioContext.createMediaElementSource(player);
 
-const plugins = {};
-
+// Very simple function to connect the plugin audionode to the host
 const connectPlugin = (audioNode) => {
-  try {
-    mediaElementSource.connect(audioNode);
-  } catch (error) {
-    mediaElementSource.connect(audioNode.getInput(0));
-  }
+  mediaElementSource.connect(audioNode);
   audioNode.connect(audioContext.destination);
 };
 
+// Very simple function to append the plugin root dom node to the host
 const mountPlugin = (domNode) => {
+  mount.innerHtml = "";
   mount.appendChild(domNode);
 };
 
-function scriptExists(url) {
-  return document.querySelectorAll(`script[src="${url}"]`).length > 0;
+// Recupere la liste des plugins a charger
+function loadPluginsList(hostGroupId) {
+  fetch("./plugins.json")
+    .then((file) => file.json())
+    .then((json) => {
+      let urls = json.map((el) => el.url);
+      instanciatePlugins(hostGroupId, urls);
+    });
 }
 
-async function buildPlugin(className, baseURL) {
-  var plugin = new window[className](audioContext, baseURL);
-
-  var node = await plugin.load();
-  var gui = await plugin.loadGui();
-
-  plugins[baseURL] = { node, gui, on: false };
+// Crée les plugins d'apres leurs urls
+function instanciatePlugins(hostGroupId, urls) {
+  let imports = urls.map((el) => import(el + "index.js"));
+  Promise.all(imports).then((modules) => {
+    Promise.all(
+      modules.map((el) => el.default.createInstance(hostGroupId, audioContext))
+    ).then((plugins) => {
+      initPlugins(urls, plugins);
+    });
+  });
 }
 
-function addThumbnail(baseURL, metadata) {
+// Charge les plugins dans l'host
+function initPlugins(urls, plugins) {
+  let nodes = plugins.map((el) => el.audioNode);
+  let guis = plugins.map((el) => el.createGui());
+  Promise.all(guis)
+    .then((nodeEl) =>
+      nodeEl.forEach((el, index) => {
+        hostPlugins[urls[index]] = { node: nodes[index], gui: el };
+      })
+    )
+    .then(() => loadThumbnails(urls));
+}
+
+// Charge les thumbnails des urls
+function loadThumbnails(urls) {
+  let thumbnails = urls.map((el) => fetch(el + "/descriptor.json"));
+  Promise.all(thumbnails).then((res) => {
+    Promise.all(res.map((el) => el.json())).then((descriptors) => {
+      descriptors.forEach((el, index) =>
+        addThumbnail(urls[index], el.thumbnail)
+      );
+    });
+  });
+}
+
+// Ajoute une thumbnail dans l'html et ecoute les clicks dessus pour ajouter le plugins
+function addThumbnail(baseURL, thumbnail) {
   var img = document.createElement("img");
-  img.src = baseURL + "/" + metadata.thumbnail;
+  img.src = baseURL + "/" + thumbnail;
   img.addEventListener(
     "click",
     () => {
-      let plugin = plugins[baseURL];
+      let plugin = hostPlugins[baseURL];
       if (plugin && !plugin.on) {
         plugin.on = true;
         mountPlugin(plugin.gui);
@@ -57,40 +91,14 @@ function addThumbnail(baseURL, metadata) {
   preview.appendChild(img);
 }
 
-function loadAllPlugins() {
-  fetch("/plugins.json")
-    .then((file) => file.json())
-    .then((json) => {
-      let urls = json.plugins.map((el) => json.baseUrl + "/" + el.path);
-      Promise.all(urls.map((el) => fetch(el + "/main.json"))).then((res) => {
-        Promise.all(res.map((el) => el.json())).then((jsons) => {
-          jsons.forEach((metadata, index) => {
-            const baseURL = urls[index];
-            const className = metadata.vendor + metadata.name;
-            const scriptURL = baseURL + "/main.js";
-
-            if (scriptExists(scriptURL)) {
-              buildPlugin(className, baseURL);
-            } else {
-              let script = document.createElement("script");
-              script.src = scriptURL;
-              document.head.appendChild(script);
-
-              script.onload = () => buildPlugin(className, baseURL);
-            }
-            addThumbnail(baseURL, metadata);
-          });
-        });
-      });
-    });
-}
-
 window.onload = () => {
-  var gainNode = audioContext.createGain();
-  gainNode.gain = 1;
-  connectPlugin(gainNode);
+  connectPlugin(audioContext.createGain());
 
-  loadAllPlugins();
+  import(
+    "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
+  ).then((module) =>
+    module.default(audioContext).then((res) => loadPluginsList(res[0]))
+  );
 
   player.onplay = () => {
     audioContext.resume();
