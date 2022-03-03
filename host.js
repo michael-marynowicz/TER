@@ -30,26 +30,6 @@ function scriptExists(url) {
   return document.querySelectorAll(`script[src="${url}"]`).length > 0;
 }
 
-//TODO Renvoyer une promesse plutot
-async function loadPlugin(baseURL) {
-  const responseJSON = await fetch(baseURL + "/main.json");
-  const metadata = await responseJSON.json();
-  const className = metadata.vendor + metadata.name;
-  const scriptURL = baseURL + "/main.js";
-
-  if (scriptExists(scriptURL)) {
-    buildPlugin(className, baseURL);
-  } else {
-    let script = document.createElement("script");
-    script.src = scriptURL;
-    document.head.appendChild(script);
-
-    script.onload = () => buildPlugin(className, baseURL);
-  }
-
-  addThumbnail(baseURL, metadata);
-}
-
 async function buildPlugin(className, baseURL) {
   var plugin = new window[className](audioContext, baseURL);
 
@@ -66,7 +46,7 @@ function addThumbnail(baseURL, metadata) {
     "click",
     () => {
       let plugin = plugins[baseURL];
-      if (!plugin.on) {
+      if (plugin && !plugin.on) {
         plugin.on = true;
         mountPlugin(plugin.gui);
         connectPlugin(plugin.node);
@@ -81,7 +61,27 @@ function loadAllPlugins() {
   fetch("/plugins.json")
     .then((file) => file.json())
     .then((json) => {
-      json.plugins.map((el) => loadPlugin(json.baseUrl + "/" + el.path));
+      let urls = json.plugins.map((el) => json.baseUrl + "/" + el.path);
+      Promise.all(urls.map((el) => fetch(el + "/main.json"))).then((res) => {
+        Promise.all(res.map((el) => el.json())).then((jsons) => {
+          jsons.forEach((metadata, index) => {
+            const baseURL = urls[index];
+            const className = metadata.vendor + metadata.name;
+            const scriptURL = baseURL + "/main.js";
+
+            if (scriptExists(scriptURL)) {
+              buildPlugin(className, baseURL);
+            } else {
+              let script = document.createElement("script");
+              script.src = scriptURL;
+              document.head.appendChild(script);
+
+              script.onload = () => buildPlugin(className, baseURL);
+            }
+            addThumbnail(baseURL, metadata);
+          });
+        });
+      });
     });
 }
 
