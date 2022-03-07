@@ -3,7 +3,6 @@ const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
 
 const hostPlugins = {};
-let nbrPluginsConnected = 0;
 
 // Safari...
 const AudioContext =
@@ -14,17 +13,34 @@ const AudioContext =
 var audioContext = new AudioContext();
 var mediaElementSource = audioContext.createMediaElementSource(player);
 
-const resetCtx = () => {
-  //TODO deconnexion
+var lastNode = mediaElementSource;
+
+const disconnectAll = () => {
+  lastNode = mediaElementSource;
   mount.childNodes.forEach((plugin) => {
-    //connectPlugin(plugin);
+    let audioNode = hostPlugins[plugin.getAttribute("data-origin")].node;
+    lastNode.disconnect(audioNode);
+    lastNode = audioNode;
   });
+  lastNode.disconnect(audioContext.destination);
+
+  lastNode = mediaElementSource;
+  lastNode.connect(audioContext.destination);
+};
+
+const reconnectAll = () => {
+  mount.childNodes.forEach((plugin) =>
+    connectPlugin(hostPlugins[plugin.getAttribute("data-origin")].node)
+  );
 };
 
 // Very simple function to connect the plugin audionode to the host
 const connectPlugin = (audioNode) => {
-  mediaElementSource.connect(audioNode);
+  lastNode.disconnect(audioContext.destination);
+  lastNode.connect(audioNode);
+
   audioNode.connect(audioContext.destination);
+  lastNode = audioNode;
 };
 
 // Very simple function to append the plugin root dom node to the host
@@ -39,14 +55,14 @@ const mountPlugin = (domNode) => {
     let parent = target.parentNode;
 
     if (parent == mount && origin != target) {
+      disconnectAll();
       if (origin.getAttribute("data-DragStartX") > event.x) {
         parent.insertBefore(origin, target);
       } else {
         parent.insertBefore(target, origin);
       }
       origin.removeAttribute("data-DragStartX");
-
-      resetCtx();
+      reconnectAll();
     }
   };
 
@@ -111,9 +127,6 @@ function addThumbnail(baseURL, thumbnail) {
       let plugin = hostPlugins[baseURL];
       if (plugin && !plugin.on) {
         plugin.on = true;
-        plugin.position = nbrPluginsConnected;
-        nbrPluginsConnected++;
-
         plugin.gui.setAttribute("data-origin", baseURL);
         mountPlugin(plugin.gui);
         connectPlugin(plugin.node);
@@ -125,7 +138,8 @@ function addThumbnail(baseURL, thumbnail) {
 }
 
 window.onload = () => {
-  connectPlugin(audioContext.createGain());
+  mediaElementSource.connect(audioContext.destination);
+
   import(
     "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
   ).then((module) =>
