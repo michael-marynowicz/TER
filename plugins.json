@@ -6,5 +6,18 @@
   {
     "name": "quadrafuzz",
     "url": "https://mainline.i3s.unice.fr/wam2/packages/quadrafuzz/dist/"
+  },
+  {
+    "name": "disto_machine",
+    "url": "https://mainline.i3s.unice.fr/wam2/packages/disto_machine/src/",
+    "thumbnail": "Gui/assets/disto.png"
+  },
+  {
+    "name": "pingpongdelay",
+    "url": "https://mainline.i3s.unice.fr/wam2/packages/pingpongdelay/dist/"
+  },
+  {
+    "name": "WamExampleTemplate",
+    "url": "https://mainline.i3s.unice.fr/wam2/packages/WamExampleTemplate/src/"
   }
 ]

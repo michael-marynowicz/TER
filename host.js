@@ -3,6 +3,7 @@ const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
 
 const hostPlugins = {};
+let nbrPluginsConnected = 0;
 
 // Safari...
 const AudioContext =
@@ -10,8 +11,15 @@ const AudioContext =
   window.webkitAudioContext || // Safari and old versions of Chrome
   false;
 
-const audioContext = new AudioContext();
-const mediaElementSource = audioContext.createMediaElementSource(player);
+var audioContext = new AudioContext();
+var mediaElementSource = audioContext.createMediaElementSource(player);
+
+const resetCtx = () => {
+  //TODO deconnexion
+  mount.childNodes.forEach((plugin) => {
+    //connectPlugin(plugin);
+  });
+};
 
 // Very simple function to connect the plugin audionode to the host
 const connectPlugin = (audioNode) => {
@@ -21,6 +29,27 @@ const connectPlugin = (audioNode) => {
 
 // Very simple function to append the plugin root dom node to the host
 const mountPlugin = (domNode) => {
+  domNode.draggable = true;
+  domNode.ondragstart = (event) => {
+    event.target.setAttribute("data-DragStartX", event.x);
+  };
+  domNode.ondragend = (event) => {
+    let origin = event.target;
+    let target = document.elementFromPoint(event.x, event.y);
+    let parent = target.parentNode;
+
+    if (parent == mount && origin != target) {
+      if (origin.getAttribute("data-DragStartX") > event.x) {
+        parent.insertBefore(origin, target);
+      } else {
+        parent.insertBefore(target, origin);
+      }
+      origin.removeAttribute("data-DragStartX");
+
+      resetCtx();
+    }
+  };
+
   mount.innerHtml = "";
   mount.appendChild(domNode);
 };
@@ -29,44 +58,44 @@ const mountPlugin = (domNode) => {
 function loadPluginsList(hostGroupId) {
   fetch("./plugins.json")
     .then((file) => file.json())
-    .then((json) => {
-      let urls = json.map((el) => el.url);
-      instanciatePlugins(hostGroupId, urls);
-    });
+    .then((json) => instanciatePlugins(hostGroupId, json));
 }
 
 // Crée les plugins d'apres leurs urls
-function instanciatePlugins(hostGroupId, urls) {
-  let imports = urls.map((el) => import(el + "index.js"));
+function instanciatePlugins(hostGroupId, plugins) {
+  let imports = plugins.map((el) => import(el.url + "index.js"));
   Promise.all(imports).then((modules) => {
     Promise.all(
       modules.map((el) => el.default.createInstance(hostGroupId, audioContext))
-    ).then((plugins) => {
-      initPlugins(urls, plugins);
+    ).then((instances) => {
+      initPlugins(plugins, instances);
     });
   });
 }
 
 // Charge les plugins dans l'host
-function initPlugins(urls, plugins) {
-  let nodes = plugins.map((el) => el.audioNode);
-  let guis = plugins.map((el) => el.createGui());
+function initPlugins(plugins, instances) {
+  let nodes = instances.map((el) => el.audioNode);
+  let guis = instances.map((el) => el.createGui());
   Promise.all(guis)
     .then((nodeEl) =>
       nodeEl.forEach((el, index) => {
-        hostPlugins[urls[index]] = { node: nodes[index], gui: el };
+        hostPlugins[plugins[index].url] = { node: nodes[index], gui: el };
       })
     )
-    .then(() => loadThumbnails(urls));
+    .then(() => loadThumbnails(plugins));
 }
 
 // Charge les thumbnails des urls
-function loadThumbnails(urls) {
-  let thumbnails = urls.map((el) => fetch(el + "/descriptor.json"));
+function loadThumbnails(plugins) {
+  let thumbnails = plugins.map((el) => fetch(el.url + "/descriptor.json"));
   Promise.all(thumbnails).then((res) => {
     Promise.all(res.map((el) => el.json())).then((descriptors) => {
       descriptors.forEach((el, index) =>
-        addThumbnail(urls[index], el.thumbnail)
+        addThumbnail(
+          plugins[index].url,
+          el.thumbnail || plugins[index].thumbnail
+        )
       );
     });
   });
@@ -75,13 +104,17 @@ function loadThumbnails(urls) {
 // Ajoute une thumbnail dans l'html et ecoute les clicks dessus pour ajouter le plugins
 function addThumbnail(baseURL, thumbnail) {
   var img = document.createElement("img");
-  img.src = baseURL + "/" + thumbnail;
+  img.src = baseURL + thumbnail;
   img.addEventListener(
     "click",
     () => {
       let plugin = hostPlugins[baseURL];
       if (plugin && !plugin.on) {
         plugin.on = true;
+        plugin.position = nbrPluginsConnected;
+        nbrPluginsConnected++;
+
+        plugin.gui.setAttribute("data-origin", baseURL);
         mountPlugin(plugin.gui);
         connectPlugin(plugin.node);
       }
@@ -93,7 +126,6 @@ function addThumbnail(baseURL, thumbnail) {
 
 window.onload = () => {
   connectPlugin(audioContext.createGain());
-
   import(
     "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
   ).then((module) =>

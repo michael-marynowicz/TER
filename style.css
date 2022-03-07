@@ -1,0 +1,33 @@
+#pedalboard {
+  display: flex;
+  justify-content: flex-end;
+  border: 3px solid black;
+  height: min-content;
+}
+
+#preview {
+  max-width: 20%;
+  overflow-y: scroll;
+  background-color: lightblue;
+  border-left: 3px solid black;
+}
+
+#preview > img {
+  max-height: 10rem;
+  margin: 0.2rem;
+  border: 2px solid white;
+  border-radius: 10px;
+}
+
+#mount {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-height: max-content;
+  overflow-x: scroll;
+}
+
+#mount > * {
+  border: 3px dashed black;
+}

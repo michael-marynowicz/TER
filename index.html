@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simple host that loads a non bundled plugin</title>
     <script type="module" src="host.js" defer></script>
+    <link href="style.css" rel="stylesheet" />
   </head>
   <body>
     <main>
@@ -14,8 +15,11 @@
         loop
         crossorigin="anonymous"
       ></audio>
-      <div id="preview"></div>
-      <div id="mount"></div>
+      <div id="pedalboard">
+        <div id="mount"></div>
+        <div id="preview"></div>
+      </div>
+      <p id="demo"></p>
     </main>
   </body>
 </html>
