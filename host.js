@@ -159,7 +159,7 @@ function deleteSave(name) {
 function initSave() {
   document.querySelector("#save").addEventListener("click", function () {
     let name = document.querySelector("#nameSave").value;
-    if (name.trim().length!=0) {
+    if (name.trim().length != 0) {
       let states = Array.from(mount.childNodes).map((plugin) =>
         hostPlugins[plugin.getAttribute("data-origin")].node.getState()
       );
