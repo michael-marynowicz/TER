@@ -175,7 +175,7 @@ function initSave(){
 }
 
 function loadSaves(){
-  selector.innerHTML = "<option value=''>--select a save--</option>";
+  selector.innerHTML = "<option value='default'>--select a save--</option>";
   Object.keys(localStorage).forEach(elem =>{
     let opt = document.createElement('option');
     opt.value = elem;
