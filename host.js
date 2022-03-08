@@ -1,7 +1,7 @@
 const player = document.querySelector("#player");
 const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
-const selector =  document.querySelector("#savesList");
+const selector = document.querySelector("#savesList");
 
 const hostPlugins = {};
 
@@ -140,56 +140,60 @@ function addThumbnail(baseURL, thumbnail) {
   preview.appendChild(img);
 }
 
-// EventListener de la sauvegarde des states des plugins
-function initSave(){
-  document.querySelector("#save").addEventListener("click", function () {
-    let states = Array.from(mount.childNodes).map((plugin) =>
-      hostPlugins[plugin.getAttribute("data-origin")].node.getState()
-    );
-  
-    Promise.all(states).then((values) => {
-      let save = values.map((res, index) => {
-        return {
-          url: mount.childNodes[index].getAttribute("data-origin"),
-          state: res,
-        };
-      });
-      localStorage.setItem(
-        document.querySelector("#nameSave").value,
-        JSON.stringify(save)
-      );
-    });
-  });
-  
-  document.querySelector("#load").addEventListener("click", function () {
-    let save = JSON.parse(
-      localStorage.getItem(document.querySelector("#nameSave").value)
-    );
-    disconnectAll();
-    mount.innerHTML = "";
-    save.forEach((el) => {
-      loadPlugin(el.url);
-      hostPlugins[el.url].node.setState(el.state);
-    });
-  });
-}
-
-function loadSaves(){
+function loadSaves() {
   selector.innerHTML = "<option value=''>--select a save--</option>";
-  Object.keys(localStorage).forEach(elem =>{
-    let opt = document.createElement('option');
+  Object.keys(localStorage).forEach((elem) => {
+    let opt = document.createElement("option");
     opt.value = elem;
     opt.innerHTML = elem;
     selector.append(opt);
   });
 }
 
-document.querySelector("#delete").addEventListener("click",function () {
-  deleteSave(selector.value);
-});
-
-function deleteSave(name){
+function deleteSave(name) {
   localStorage.removeItem(name);
+  loadSaves();
+}
+
+// EventListener de la sauvegarde des states des plugins
+function initSave() {
+  document.querySelector("#save").addEventListener("click", function () {
+    let name = document.querySelector("#nameSave").value;
+    if (name.trim().length!=0) {
+      let states = Array.from(mount.childNodes).map((plugin) =>
+        hostPlugins[plugin.getAttribute("data-origin")].node.getState()
+      );
+
+      Promise.all(states).then((values) => {
+        let save = values.map((res, index) => {
+          return {
+            url: mount.childNodes[index].getAttribute("data-origin"),
+            state: res,
+          };
+        });
+        localStorage.setItem(name, JSON.stringify(save));
+      });
+    }
+  });
+
+  document.querySelector("#load").addEventListener("click", function () {
+    let save = JSON.parse(
+      localStorage.getItem(document.querySelector("#nameSave").value)
+    );
+    if (save) {
+      disconnectAll();
+      mount.innerHTML = "";
+      save.forEach((el) => {
+        loadPlugin(el.url);
+        hostPlugins[el.url].node.setState(el.state);
+      });
+    }
+  });
+
+  document.querySelector("#delete").addEventListener("click", function () {
+    deleteSave(selector.value);
+  });
+
   loadSaves();
 }
 
