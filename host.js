@@ -3,9 +3,7 @@ const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
 
 const hostPlugins = {};
-let sizeON = 0;
-let mySave;
-let hostPluginId;
+
 // Safari...
 const AudioContext =
   window.AudioContext || // Default
@@ -17,12 +15,14 @@ var mediaElementSource = audioContext.createMediaElementSource(player);
 
 var lastNode = mediaElementSource;
 
+// Deconnecte tous les plugins de l'audio
 const disconnectAll = () => {
   lastNode = mediaElementSource;
-  mount.childNodes.forEach((plugin) => {
-    let audioNode = hostPlugins[plugin.getAttribute("data-origin")].node;
-    lastNode.disconnect(audioNode);
-    lastNode = audioNode;
+  mount.childNodes.forEach((child) => {
+    let plugin = hostPlugins[child.getAttribute("data-origin")];
+    plugin.on = false;
+    lastNode.disconnect(plugin.node);
+    lastNode = plugin.node;
   });
   lastNode.disconnect(audioContext.destination);
 
@@ -30,6 +30,7 @@ const disconnectAll = () => {
   lastNode.connect(audioContext.destination);
 };
 
+// Reconnecte tous les plugins deconnectés
 const reconnectAll = () => {
   mount.childNodes.forEach((plugin) =>
     connectPlugin(hostPlugins[plugin.getAttribute("data-origin")].node)
@@ -119,13 +120,12 @@ function loadThumbnails(plugins) {
   });
 }
 
-function loadAModule(baseURL){
+// Charge le plugin sur la page html avec gui + audio
+function loadPlugin(baseURL) {
   let plugin = hostPlugins[baseURL];
   if (plugin && !plugin.on) {
-      plugin.gui.setAttribute("data-origin", baseURL);
-      plugin.on = true;
-      plugin.nb = sizeON;
-      sizeON++;
+    plugin.gui.setAttribute("data-origin", baseURL);
+    plugin.on = true;
     mountPlugin(plugin.gui);
     connectPlugin(plugin.node);
   }
@@ -135,54 +135,54 @@ function loadAModule(baseURL){
 function addThumbnail(baseURL, thumbnail) {
   var img = document.createElement("img");
   img.src = baseURL + thumbnail;
-  img.addEventListener(
-    "click",
-    () => {
-      loadAModule(baseURL)
-    },
-    { passive: false }
-  );
+  img.addEventListener("click", () => loadPlugin(baseURL), { passive: false });
   preview.appendChild(img);
 }
 
-document.querySelector("#save").addEventListener("click", function () {
-  mySave = [];
-  let myPromises  = [];
-  Object.keys(hostPlugins).forEach( elem => {
-    if(hostPlugins[elem]["on"] !== undefined){
-      let temp =  hostPlugins[elem]["node"].getState();
-      myPromises.push(temp);
-      temp.then((res) =>{
-        mySave.splice(hostPlugins[elem]["nb"], 0, {url : elem, states : res})
+// EventListener de la sauvegarde des states des plugins
+function initSave(){
+  document.querySelector("#save").addEventListener("click", function () {
+    let states = Array.from(mount.childNodes).map((plugin) =>
+      hostPlugins[plugin.getAttribute("data-origin")].node.getState()
+    );
+  
+    Promise.all(states).then((values) => {
+      let save = values.map((res, index) => {
+        return {
+          url: mount.childNodes[index].getAttribute("data-origin"),
+          state: res,
+        };
       });
-    }
+      localStorage.setItem(
+        document.querySelector("#nameSave").value,
+        JSON.stringify(save)
+      );
+    });
   });
-  Promise.all(myPromises).then(() => {
-    localStorage.setItem(document.querySelector("#nameSave").value,JSON.stringify(mySave));
+  
+  document.querySelector("#load").addEventListener("click", function () {
+    let save = JSON.parse(
+      localStorage.getItem(document.querySelector("#nameSave").value)
+    );
+    disconnectAll();
+    mount.innerHTML = "";
+    save.forEach((el) => {
+      loadPlugin(el.url);
+      hostPlugins[el.url].node.setState(el.state);
+    });
   });
-});
-
-
-
-document.querySelector("#load").addEventListener("click", function () {
-  mount.innerHTML = "";
-  mySave = JSON.parse(localStorage.getItem(document.querySelector("#nameSave").value));
-  console.log(mySave);
-  mySave.forEach(elem =>{
-   loadAModule(elem["url"]);
-   hostPlugins[elem["url"]]["node"].setState(elem["states"])
-  });
-});
+}
 
 window.onload = () => {
   mediaElementSource.connect(audioContext.destination);
 
+  initSave();
+
   import(
     "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
-  ).then((module) => module.default(audioContext).then((res) => {
-    hostPluginId = res[0];
+  ).then((module) =>
     module.default(audioContext).then((res) => loadPluginsList(res[0]))
-  }));
+  );
 
   player.onplay = () => {
     audioContext.resume();
