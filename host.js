@@ -1,6 +1,7 @@
 const player = document.querySelector("#player");
 const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
+const selector =  document.querySelector("#savesList");
 
 const hostPlugins = {};
 let sizeON = 0;
@@ -159,20 +160,40 @@ document.querySelector("#save").addEventListener("click", function () {
   });
   Promise.all(myPromises).then(() => {
     localStorage.setItem(document.querySelector("#nameSave").value,JSON.stringify(mySave));
+    loadSaves();
   });
 });
 
 
 
 document.querySelector("#load").addEventListener("click", function () {
+  let name = document.getElementById("savesList").value;
   mount.innerHTML = "";
-  mySave = JSON.parse(localStorage.getItem(document.querySelector("#nameSave").value));
-  console.log(mySave);
+  mySave = JSON.parse(localStorage.getItem(name));
   mySave.forEach(elem =>{
    loadAModule(elem["url"]);
    hostPlugins[elem["url"]]["node"].setState(elem["states"])
   });
 });
+
+function loadSaves(){
+  selector.innerHTML = "<option value=''>--select a save--</option>";
+  Object.keys(localStorage).forEach(elem =>{
+    let opt = document.createElement('option');
+    opt.value = elem;
+    opt.innerHTML = elem;
+    selector.append(opt);
+  });
+}
+
+document.querySelector("#delete").addEventListener("click",function () {
+  deleteSave(selector.value);
+});
+
+function deleteSave(name){
+  localStorage.removeItem(name);
+  loadSaves();
+}
 
 window.onload = () => {
   mediaElementSource.connect(audioContext.destination);
@@ -183,7 +204,7 @@ window.onload = () => {
     hostPluginId = res[0];
     module.default(audioContext).then((res) => loadPluginsList(res[0]))
   }));
-
+  loadSaves();
   player.onplay = () => {
     audioContext.resume();
   };
