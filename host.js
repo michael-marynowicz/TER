@@ -1,6 +1,7 @@
 const player = document.querySelector("#player");
 const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
+const selector =  document.querySelector("#savesList");
 
 const hostPlugins = {};
 
@@ -171,6 +172,25 @@ function initSave(){
       hostPlugins[el.url].node.setState(el.state);
     });
   });
+}
+
+function loadSaves(){
+  selector.innerHTML = "<option value=''>--select a save--</option>";
+  Object.keys(localStorage).forEach(elem =>{
+    let opt = document.createElement('option');
+    opt.value = elem;
+    opt.innerHTML = elem;
+    selector.append(opt);
+  });
+}
+
+document.querySelector("#delete").addEventListener("click",function () {
+  deleteSave(selector.value);
+});
+
+function deleteSave(name){
+  localStorage.removeItem(name);
+  loadSaves();
 }
 
 window.onload = () => {
