@@ -2,7 +2,7 @@ const player = document.querySelector("#player");
 const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
 const selector = document.querySelector("#savesList");
-
+let hostGroupId;
 const hostPlugins = {};
 
 // Safari...
@@ -75,15 +75,16 @@ const mountPlugin = (domNode) => {
 };
 
 // Recupere la liste des plugins a charger
-function loadPluginsList(hostGroupId) {
+function loadPluginsList() {
   fetch("./plugins.json")
     .then((file) => file.json())
-    .then((json) => instanciatePlugins(hostGroupId, json));
+    .then((json) => instanciatePlugins(json));
 }
 
 // Crée les plugins d'apres leurs urls
-function instanciatePlugins(hostGroupId, plugins) {
+function instanciatePlugins(plugins) {
   let imports = plugins.map((el) => import(el.url + "index.js"));
+  console.log(imports);
   Promise.all(imports).then((modules) => {
     Promise.all(
       modules.map((el) => el.default.createInstance(hostGroupId, audioContext))
@@ -197,15 +198,29 @@ function initSave() {
   loadSaves();
 }
 
+function loadByUsingURL(){
+  document.querySelector("#loadUrl").addEventListener("click", function () {
+    let plugin= new Object();
+    plugin.url = document.querySelector("#nameSave").value;
+    instanciatePlugins([plugin]);
+  });
+}
+
+
+
 window.onload = () => {
   mediaElementSource.connect(audioContext.destination);
 
   initSave();
+  loadByUsingURL();
 
   import(
     "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
   ).then((module) =>
-    module.default(audioContext).then((res) => loadPluginsList(res[0]))
+    module.default(audioContext).then((res) => {
+      hostGroupId = res[0];
+      loadPluginsList();
+    })
   );
 
   player.onplay = () => {
