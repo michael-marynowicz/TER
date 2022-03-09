@@ -197,8 +197,8 @@ function initSave() {
 
   loadSaves();
 }
-
-function loadByUsingURL(){
+//Charge le plugin sur la page html avec gui + audio, a partir d'une URL donne en input
+function loadPluginsFromUrl(){
   document.querySelector("#loadUrl").addEventListener("click", function () {
     let url = document.querySelector("#nameSave").value;
     try {
@@ -218,7 +218,7 @@ window.onload = () => {
   mediaElementSource.connect(audioContext.destination);
 
   initSave();
-  loadByUsingURL();
+  loadPluginsFromUrl();
 
   import(
     "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
