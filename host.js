@@ -200,9 +200,15 @@ function initSave() {
 
 function loadByUsingURL(){
   document.querySelector("#loadUrl").addEventListener("click", function () {
-    let plugin= new Object();
-    plugin.url = document.querySelector("#nameSave").value;
-    instanciatePlugins([plugin]);
+    let url = document.querySelector("#nameSave").value;
+    try {
+      const plugin = JSON.parse(url);
+      instanciatePlugins([plugin]);
+    } catch (e) {
+      let plugin= new Object();
+      plugin.url = url
+      instanciatePlugins([plugin]);
+    }
   });
 }
 
