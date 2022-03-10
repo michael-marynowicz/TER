@@ -1,8 +1,8 @@
 const player = document.querySelector("#player");
 const mount = document.querySelector("#mount");
 const preview = document.querySelector("#preview");
-const selector =  document.querySelector("#savesList");
-
+const selector = document.querySelector("#savesList");
+let hostGroupId;
 const hostPlugins = {};
 
 // Safari...
@@ -75,15 +75,16 @@ const mountPlugin = (domNode) => {
 };
 
 // Recupere la liste des plugins a charger
-function loadPluginsList(hostGroupId) {
+function loadPluginsList() {
   fetch("./plugins.json")
     .then((file) => file.json())
-    .then((json) => instanciatePlugins(hostGroupId, json));
+    .then((json) => instanciatePlugins(json));
 }
 
 // Crée les plugins d'apres leurs urls
-function instanciatePlugins(hostGroupId, plugins) {
+function instanciatePlugins(plugins) {
   let imports = plugins.map((el) => import(el.url + "index.js"));
+  console.log(imports);
   Promise.all(imports).then((modules) => {
     Promise.all(
       modules.map((el) => el.default.createInstance(hostGroupId, audioContext))
@@ -140,68 +141,92 @@ function addThumbnail(baseURL, thumbnail) {
   preview.appendChild(img);
 }
 
-// EventListener de la sauvegarde des states des plugins
-function initSave(){
-  document.querySelector("#save").addEventListener("click", function () {
-    let states = Array.from(mount.childNodes).map((plugin) =>
-      hostPlugins[plugin.getAttribute("data-origin")].node.getState()
-    );
-  
-    Promise.all(states).then((values) => {
-      let save = values.map((res, index) => {
-        return {
-          url: mount.childNodes[index].getAttribute("data-origin"),
-          state: res,
-        };
-      });
-      localStorage.setItem(
-        document.querySelector("#nameSave").value,
-        JSON.stringify(save)
-      );
-    });
-  });
-  
-  document.querySelector("#load").addEventListener("click", function () {
-    let save = JSON.parse(
-      localStorage.getItem(document.querySelector("#nameSave").value)
-    );
-    disconnectAll();
-    mount.innerHTML = "";
-    save.forEach((el) => {
-      loadPlugin(el.url);
-      hostPlugins[el.url].node.setState(el.state);
-    });
-  });
-}
-
-function loadSaves(){
+function loadSaves() {
   selector.innerHTML = "<option value=''>--select a save--</option>";
-  Object.keys(localStorage).forEach(elem =>{
-    let opt = document.createElement('option');
+  Object.keys(localStorage).forEach((elem) => {
+    let opt = document.createElement("option");
     opt.value = elem;
     opt.innerHTML = elem;
     selector.append(opt);
   });
 }
 
-document.querySelector("#delete").addEventListener("click",function () {
-  deleteSave(selector.value);
-});
-
-function deleteSave(name){
+function deleteSave(name) {
   localStorage.removeItem(name);
   loadSaves();
 }
+
+// EventListener de la sauvegarde des states des plugins
+function initSave() {
+  document.querySelector("#save").addEventListener("click", function () {
+    let name = document.querySelector("#nameSave").value;
+    if (name.trim().length != 0) {
+      let states = Array.from(mount.childNodes).map((plugin) =>
+        hostPlugins[plugin.getAttribute("data-origin")].node.getState()
+      );
+
+      Promise.all(states).then((values) => {
+        let save = values.map((res, index) => {
+          return {
+            url: mount.childNodes[index].getAttribute("data-origin"),
+            state: res,
+          };
+        });
+        localStorage.setItem(name, JSON.stringify(save));
+      });
+    }
+  });
+
+  document.querySelector("#load").addEventListener("click", function () {
+    let save = JSON.parse(
+      localStorage.getItem(document.querySelector("#nameSave").value)
+    );
+    if (save) {
+      disconnectAll();
+      mount.innerHTML = "";
+      save.forEach((el) => {
+        loadPlugin(el.url);
+        hostPlugins[el.url].node.setState(el.state);
+      });
+    }
+  });
+
+  document.querySelector("#delete").addEventListener("click", function () {
+    deleteSave(selector.value);
+  });
+
+  loadSaves();
+}
+//Charge le plugin sur la page html avec gui + audio, a partir d'une URL donne en input
+function loadPluginsFromUrl(){
+  document.querySelector("#loadUrl").addEventListener("click", function () {
+    let url = document.querySelector("#nameSave").value;
+    try {
+      const plugin = JSON.parse(url);
+      instanciatePlugins([plugin]);
+    } catch (e) {
+      let plugin= new Object();
+      plugin.url = url
+      instanciatePlugins([plugin]);
+    }
+  });
+}
+
+
 
 window.onload = () => {
   mediaElementSource.connect(audioContext.destination);
 
   initSave();
+  loadPluginsFromUrl();
 
   import(
     "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
   ).then((module) =>
-    module.default(audioContext).then((res) => loadPluginsList(res[0]))
+    module.default(audioContext).then((res) => {
+      hostGroupId = res[0];
+      loadPluginsList();
+    })
   );
 
   player.onplay = () => {
