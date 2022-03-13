@@ -1,0 +1,17 @@
+img {
+  max-height: 10rem;
+}
+
+#preview {
+  border: 1rem ridge rgba(211, 220, 50, 0.6);
+}
+
+#board {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: cornflowerblue;
+  padding: 1rem;
+  overflow-x: scroll;
+  border: 1rem ridge rgba(71, 71, 66, 0.6);
+}
