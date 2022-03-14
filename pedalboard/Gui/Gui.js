@@ -9,6 +9,7 @@ export default class pedalboardGui extends HTMLElement {
     this.init();
   }
 
+  // Initlialise the differents elements of the gui
   async init() {
     this.setStyle();
 
@@ -23,6 +24,7 @@ export default class pedalboardGui extends HTMLElement {
     this._root.appendChild(this.saveMenu);
   }
 
+  // Load the thumbnails of the plugins
   async loadThumbnails() {
     let pedals = Object.keys(this._plug.pedals);
     let urls = await Promise.all(
@@ -51,6 +53,7 @@ export default class pedalboardGui extends HTMLElement {
     return preview;
   }
 
+  // Create the save panel
   async loadSaves() {
     let file = await fetch("../pedalboard/saves.json");
     this.folders = await file.json();
@@ -60,42 +63,13 @@ export default class pedalboardGui extends HTMLElement {
     let savesInfos = document.createElement("div");
     savesInfos.id = "savesInfos";
 
-    let folders = document.createElement("ul");
-    folders.id = "folders";
-    for (let i = 0; i < 10; i++) {
-      let el = document.createElement("li");
+    let folders = this.createFolders(keys);
 
-      let edit = document.createElement("button");
-      edit.innerHTML = "E";
-      el.append(edit);
+    this.saves = document.createElement("ul");
+    this.saves.id = "saves";
 
-      let remove = document.createElement("button");
-      remove.innerHTML = "x";
-      el.append(remove);
-
-      if (i < keys.length) {
-        let text = document.createElement("span");
-        text.innerHTML = keys[i];
-        el.append(text);
-      }
-      folders.appendChild(el);
-    }
-    let newFolder = document.createElement("button");
-    newFolder.innerHTML = "+";
-    folders.appendChild(newFolder);
-
-    let saves = document.createElement("ul");
-    saves.id = "saves";
-    for (let i = 0; i < 10; i++) {
-      let el = document.createElement("li");
-      if (i == 9) {
-        el.id = "newSave";
-      }
-      saves.appendChild(el);
-    }
-
-    let infos = document.createElement("infos");
-    infos.id = "infos";
+    this.infos = document.createElement("infos");
+    this.infos.id = "infos";
 
     let foldersTitle = document.createElement("h1");
     foldersTitle.innerHTML = "Categories";
@@ -108,11 +82,71 @@ export default class pedalboardGui extends HTMLElement {
     savesInfos.appendChild(savesTitle);
     savesInfos.appendChild(infosTitle);
     savesInfos.appendChild(folders);
-    savesInfos.appendChild(saves);
-    savesInfos.appendChild(infos);
+    savesInfos.appendChild(this.saves);
+    savesInfos.appendChild(this.infos);
     return savesInfos;
   }
 
+  // Create a list element modifiable with double click and triggering an event with a single click
+  createSaveInput(key, callback) {
+    let el = document.createElement("li");
+
+    let text = document.createElement("span");
+    text.innerHTML = key;
+    text.addEventListener("click", callback);
+    el.append(text);
+
+    let remove = document.createElement("button");
+    remove.innerHTML = "x";
+    el.append(remove);
+
+    let input = document.createElement("input");
+    input.addEventListener("keyup", (e) => {
+      if (e.key == "Enter") input.blur();
+    });
+    input.addEventListener("blur", (e) => (text.innerHTML = e.target.value));
+
+    text.addEventListener("dblclick", () => {
+      input.value = text.innerHTML;
+      text.innerHTML = "";
+      text.appendChild(input);
+      input.focus();
+    });
+    return el;
+  }
+
+  // Create the list of folders
+  createFolders(keys) {
+    let folders = document.createElement("ul");
+    folders.id = "folders";
+
+    keys.forEach((key) =>
+      folders.appendChild(this.createSaveInput(key, () => this.showFolder(key)))
+    );
+
+    return folders;
+  }
+
+  // Show content of the folder
+  showFolder(folder) {
+    let saves = Object.keys(this.folders[folder]);
+    this.saves.innerHTML = "";
+    saves.forEach((key) =>
+      this.saves.appendChild(
+        this.createSaveInput(key, () => this.loadSave(folder, key))
+      )
+    );
+  }
+
+  // Load the save to the audioNode au show it's informations
+  loadSave(folder, key) {
+    console.log(folder, key);
+    this.infos.innerHTML = `Categorie: ${folder}</br>Save: ${key}</br>Infos: ${JSON.stringify(
+      this.folders[folder][key]
+    )}`;
+  }
+
+  // Add the plugin to the board
   addPlugin(instance, id) {
     instance.createGui().then((gui) => {
       gui.draggable = true;
@@ -139,6 +173,7 @@ export default class pedalboardGui extends HTMLElement {
     });
   }
 
+  // Link the css
   setStyle() {
     const linkElem = document.createElement("link");
     linkElem.setAttribute("rel", "stylesheet");
