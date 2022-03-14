@@ -15,3 +15,38 @@ img {
   overflow-x: scroll;
   border: 1rem ridge rgba(71, 71, 66, 0.6);
 }
+
+#savesInfos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1rem ridge rgba(248, 164, 9, 0.801);
+  margin: 0;
+}
+
+#folders,
+#saves,
+#infos,
+#savesInfos > h1 {
+  border-right: 3px groove rgba(248, 164, 9, 0.801);
+  margin: 0;
+}
+
+#infos,
+#savesInfos > h1:last-of-type {
+  border-right: none;
+}
+
+#folders,
+#saves,
+#infos {
+  border-top: none;
+}
+
+#savesInfos > h1 {
+  border-bottom: none;
+  text-align: center;
+}
+
+li {
+  list-style-type: square;
+}

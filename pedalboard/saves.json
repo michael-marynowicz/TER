@@ -1,0 +1,17 @@
+{
+  "Rock": {
+    "Nirvana": {
+      "Style": "Grunge / Rock",
+      "Tags": "Grunge - Rock"
+    },
+    "Black Sabbath": {
+      "Style": "Heavy-Metal / Hard-Rock / Stoner / Doom",
+      "Tags": "Hard Rock - Heavy Metal - Rock - Traditional Doom Metal"
+    }
+  },
+  "Pop": {
+    "Queen": {},
+    "The Beatles": {},
+    "AC/DC": {}
+  }
+}

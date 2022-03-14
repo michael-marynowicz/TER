@@ -13,8 +13,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
    */
   setup(wamNode) {
     this._wamNode = wamNode;
-    this.lastNode = this._input;
-    this.connectNodes();
+    this.connectNodes([]);
   }
 
   constructor(context, options) {
@@ -28,11 +27,17 @@ export default class PedalBoardNode extends CompositeAudioNode {
     this._output = this.context.createGain();
   }
 
-  connectNodes() {
-    this._input.connect(this._output);
+  connectNodes(nodes) {
+    this.lastNode = this._input;
+    nodes.forEach((el) => {
+      let audioNode = this.nodes[el.id];
+      this.lastNode.connect(audioNode);
+      this.lastNode = audioNode;
+    });
+    this.lastNode.connect(this._output);
   }
 
-  disconnectAll(nodes) {
+  disconnectNodes(nodes) {
     this.lastNode = this._input;
     nodes.forEach((el) => {
       let audioNode = this.nodes[el.id];
@@ -40,13 +45,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
       this.lastNode = audioNode;
     });
     this.lastNode.disconnect(this._output);
-
-    this.lastNode = this._input;
-    this.lastNode.connect(this._output);
-  }
-
-  reconnectAll(nodes) {
-    nodes.forEach((el) => this.connectPlugin(this.nodes[el.id]));
+    this.connectNodes([]);
   }
 
   connectPlugin(audioNode) {
