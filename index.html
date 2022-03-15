@@ -2,21 +2,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple host that loads a non bundled plugin</title>
-    <script type="module" src="host.js" defer></script>
-    <link href="style.css" rel="stylesheet" />
+    <title>PedalBoard</title>
+    <link rel="icon" href="data:," />
   </head>
+
   <body>
-  <div>
-      <input type="text" id="nameSave" placeholder="Name" />
-      <button id="save">save</button>
-  </div>
-  <div>
-    <select  id="savesList"></select>
-    <button id="load">load</button>
-    <button id="loadUrl">loadUrl</button>
-    <button id="delete">delete</button>
-  </div>
     <main>
       <audio
         id="player"
@@ -25,11 +15,8 @@
         loop
         crossorigin="anonymous"
       ></audio>
-      <div id="pedalboard">
-        <div id="mount"></div>
-        <div id="preview"></div>
-      </div>
-      <p id="demo"></p>
+      <div id="mount"></div>
     </main>
+    <script type="module" src="host.js"></script>
   </body>
 </html>
