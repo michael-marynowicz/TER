@@ -13,6 +13,9 @@ export default class pedalboardGui extends HTMLElement {
   async init() {
     this.setStyle();
 
+    this.img = document.createElement("img");
+    this.img.src = "../pedalboard/Gui/assets/notfound.jpg";
+
     this.preview = await this.loadThumbnails();
     this._root.appendChild(this.preview);
 
@@ -47,6 +50,7 @@ export default class pedalboardGui extends HTMLElement {
       img.addEventListener("click", () => this._plug.addPedal(pedals[index]), {
         passive: false,
       });
+      this._plug.pedals[pedals[index]].img = img;
       preview.appendChild(img);
     });
 
@@ -147,10 +151,11 @@ export default class pedalboardGui extends HTMLElement {
   }
 
   // Add the plugin to the board
-  addPlugin(instance, id) {
+  addPlugin(instance, img, id) {
     instance.createGui().then((gui) => {
       gui.draggable = true;
       gui.ondragstart = (event) => {
+        event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
         this.DragStartX = event.x;
       };
       gui.ondragend = (event) => {

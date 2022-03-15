@@ -48,20 +48,27 @@ export default class PedalBoardPlugin extends WebAudioModule {
   }
 
   async fetchPedals() {
-    let file = await fetch("../pedalboard/pedals.json");
-    let json = await file.json();
+    let repos = await fetch("../pedalboard/repositories.json");
+    let json2 = await repos.json();
+    let files = await Promise.allSettled(json2.map((el) => fetch(el)));
+    let urls = await Promise.all(
+      files
+        .filter((el) => el.status == "fulfilled")
+        .map((el) => el.value.json())
+    );
+    urls = urls.reduce((arr, next) => arr.concat(next), []);
 
     let responses = await Promise.all(
-      json.map((el) => fetch(`${el}descriptor.json`))
+      urls.map((el) => fetch(`${el}descriptor.json`))
     );
 
     let descriptors = await Promise.all(responses.map((el) => el.json()));
-    let modules = await Promise.all(json.map((el) => import(`${el}index.js`)));
+    let modules = await Promise.all(urls.map((el) => import(`${el}index.js`)));
 
     this.pedals = {};
     descriptors.forEach((el, index) => {
       this.pedals[el.name] = {
-        url: json[index],
+        url: urls[index],
         descriptor: el,
         module: modules[index],
       };
@@ -75,7 +82,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
       this.pedalboardNode.context
     ).then((instance) => {
       this.pedalboardNode.addPlugin(instance.audioNode, this.id);
-      this.gui.addPlugin(instance, this.id);
+      this.gui.addPlugin(instance, this.pedals[pedalName].img, this.id);
       this.id++;
     });
   }

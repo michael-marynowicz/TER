@@ -16,6 +16,10 @@ img {
   border: 1rem ridge rgba(71, 71, 66, 0.6);
 }
 
+#board > * {
+  cursor: move;
+}
+
 #savesInfos {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
