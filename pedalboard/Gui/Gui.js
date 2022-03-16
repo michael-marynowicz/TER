@@ -13,9 +13,6 @@ export default class pedalboardGui extends HTMLElement {
   async init() {
     this.setStyle();
 
-    this.img = document.createElement("img");
-    this.img.src = "../pedalboard/Gui/assets/notfound.jpg";
-
     this.preview = await this.loadThumbnails();
     this._root.appendChild(this.preview);
 
@@ -30,9 +27,17 @@ export default class pedalboardGui extends HTMLElement {
   // Load the thumbnails of the plugins
   async loadThumbnails() {
     let pedals = Object.keys(this._plug.pedals);
+    let keywords = { all: [] };
     let urls = await Promise.all(
       pedals.map((el) => {
         let pedal = this._plug.pedals[el];
+        keywords["all"].push(el);
+        pedal.descriptor.keywords.forEach((k) => {
+          if (!(k in keywords)) {
+            keywords[k] = [];
+          }
+          keywords[k].push(el);
+        });
         let thumbnail = pedal.descriptor.thumbnail;
         if (thumbnail == "") {
           return "../pedalboard/Gui/assets/notfound.jpg";
@@ -44,6 +49,25 @@ export default class pedalboardGui extends HTMLElement {
     let preview = document.createElement("div");
     preview.id = "preview";
 
+    let select = document.createElement("select");
+    const refreshImages = (select) => {
+      let keys = Object.keys(keywords);
+      let currentKey = keys[select.selectedIndex];
+      this.images.innerHTML = "";
+      keywords[currentKey].forEach((el) => {
+        this.images.appendChild(this._plug.pedals[el].img);
+      });
+    };
+    select.addEventListener("change", (event) => refreshImages(event.target));
+
+    for (let key of Object.keys(keywords)) {
+      let filter = document.createElement("option");
+      filter.innerHTML = key;
+      select.appendChild(filter);
+    }
+    preview.appendChild(select);
+
+    this.images = document.createElement("div");
     urls.forEach((el, index) => {
       let img = document.createElement("img");
       img.src = el;
@@ -51,9 +75,10 @@ export default class pedalboardGui extends HTMLElement {
         passive: false,
       });
       this._plug.pedals[pedals[index]].img = img;
-      preview.appendChild(img);
     });
+    preview.appendChild(this.images);
 
+    refreshImages(select);
     return preview;
   }
 
