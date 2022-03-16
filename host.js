@@ -3,9 +3,9 @@ const mount = document.querySelector("#mount");
 
 // Safari...
 const AudioContext =
-  window.AudioContext || // Default
-  window.webkitAudioContext || // Safari and old versions of Chrome
-  false;
+    window.AudioContext || // Default
+    window.webkitAudioContext || // Safari and old versions of Chrome
+    false;
 
 const audioContext = new AudioContext();
 const mediaElementSource = audioContext.createMediaElementSource(player);
@@ -25,8 +25,8 @@ const mountPlugin = (domNode) => {
 (async () => {
   // Init WamEnv
   const { default: initializeWamHost } = await import(
-    "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
-  );
+      "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk/src/initializeWamHost.js"
+      );
   const [hostGroupId] = await initializeWamHost(audioContext);
 
   // Import WAM

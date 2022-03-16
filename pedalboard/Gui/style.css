@@ -54,3 +54,17 @@ img {
 li {
   list-style-type: square;
 }
+#cross{
+  width : 15px;
+  height: 15px;
+  padding-right: 10px;
+  margin-top: 5px;
+}
+.nameAndCross{
+  background-color: gray;
+  border-radius: 1rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+
