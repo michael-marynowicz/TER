@@ -71,10 +71,14 @@ export default class pedalboardGui extends HTMLElement {
 
     this.saves = document.createElement("ul");
     this.saves.id = "saves";
-
+    
+    //Input Saving
+    
+    this.saves.appendChild(this.createDivForSaving());
+    //-----------
     this.infos = document.createElement("infos");
     this.infos.id = "infos";
-
+    
     let foldersTitle = document.createElement("h1");
     foldersTitle.innerHTML = "Categories";
     let savesTitle = document.createElement("h1");
@@ -91,6 +95,46 @@ export default class pedalboardGui extends HTMLElement {
     return savesInfos;
   }
 
+  createDivForSaving(){
+
+    //  container
+    let myDivSaving = document.createElement("div");
+    
+    //  select
+    let selectSaving = document.createElement("select");
+    selectSaving.id = "saveSelect";
+    Object.keys(this.folders).forEach((elem) =>{
+      let optTemp = document.createElement("option");
+      optTemp.innerHTML = elem;
+      optTemp.value = elem;
+      selectSaving.appendChild(optTemp);
+    })
+    selectSaving.style = "padding: 2px";
+    
+    //  input
+    let myInput = document.createElement("input");
+    myInput.id = "saveName";
+    myInput.type = "text";
+    
+    //  button
+    let myButtonSave = document.createElement("button");
+    myButtonSave.innerHTML = "+";
+    myButtonSave.addEventListener("click", ()=>{
+      console.log(this._plug.pedalboardNode.nodes);
+      let arraySave = [];
+      for (let index = 0; index < Object.keys(this._plug.pedalboardNode.nodes).length; index++) {
+        let element = this._plug.pedalboardNode.nodes[index];
+        console.log(element._output.baseURL);
+      }
+      //this.saveAfile(selectSaving.value,myInput.value);
+    })
+
+    myDivSaving.appendChild(selectSaving);
+    myDivSaving.appendChild(myInput);
+    myDivSaving.appendChild(myButtonSave);
+    return myDivSaving;
+  }
+
   // Create a list element modifiable with double click and triggering an event with a single click
   createSaveInput(key, callback) {
     let el = document.createElement("li");
@@ -103,7 +147,7 @@ export default class pedalboardGui extends HTMLElement {
     let remove = document.createElement("button");
     remove.innerHTML = "x";
     el.append(remove);
-
+    
     let input = document.createElement("input");
     input.addEventListener("keyup", (e) => {
       if (e.key == "Enter") input.blur();
@@ -140,6 +184,12 @@ export default class pedalboardGui extends HTMLElement {
         this.createSaveInput(key, () => this.loadSave(folder, key))
       )
     );
+  }
+
+  saveAfile(folder,key,arraySave){
+    if (Cache[folder] === undefined)Cache[folder] = {};
+    Cache[folder][key] = [];
+    console.log(Cache[folder]);
   }
 
   // Load the save to the audioNode au show it's informations
