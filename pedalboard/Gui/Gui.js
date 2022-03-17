@@ -84,8 +84,12 @@ export default class pedalboardGui extends HTMLElement {
 
   // Create the save panel
   async loadSaves() {
-    let file = await fetch("../pedalboard/saves.json");
-    this.folders = await file.json();
+    if (window.localStorage["pedalBoardSaves"] == undefined) {
+      let file = await fetch("../pedalboard/saves.json");
+      let json = await file.json();
+      window.localStorage["pedalBoardSaves"] = JSON.stringify(json);
+    }
+    this.folders = JSON.parse(window.localStorage["pedalBoardSaves"]);
 
     let keys = Object.keys(this.folders);
 
@@ -96,14 +100,10 @@ export default class pedalboardGui extends HTMLElement {
 
     this.saves = document.createElement("ul");
     this.saves.id = "saves";
-    
-    //Input Saving
-    
-    this.createDivForSaving(this.saves);
-    //-----------
+
     this.infos = document.createElement("infos");
     this.infos.id = "infos";
-    
+
     let foldersTitle = document.createElement("h1");
     foldersTitle.innerHTML = "Categories";
     let savesTitle = document.createElement("h1");
@@ -120,76 +120,38 @@ export default class pedalboardGui extends HTMLElement {
     return savesInfos;
   }
 
-  createDivForSaving(container){
-
-    //  container
-    let myDivSaving = document.createElement("div");
-    container.appendChild(myDivSaving);
-
-    //  div
-    let myDivDynamic = document.createElement("div");
-
-    //  select
-    let selectSaving = document.createElement("select");
-    selectSaving.id = "saveSelect";
-    Object.keys(this.folders).forEach((elem) =>{
-      let optTemp = document.createElement("option");
-      optTemp.innerHTML = elem;
-      optTemp.value = elem;
-      selectSaving.appendChild(optTemp);
-    })
-    selectSaving.style = "padding: 2px";
-    selectSaving.addEventListener("change",()=>{
-      this.showSaves(selectSaving.value,myDivDynamic);
-    });
-
-    //  input
-    let myInput = document.createElement("input");
-    myInput.id = "saveName";
-    myInput.type = "text";
-    
-    //  button
-    let myButtonSave = document.createElement("button");
-    myButtonSave.innerHTML = "save";
-
-    
-    myButtonSave.addEventListener("click", ()=>{
-      this._plug.pedalboardNode.saveNodes(this.board.childNodes,selectSaving.value,myInput.value);
-      this.showSaves(selectSaving.value,myDivDynamic)
-    })
-
-    this.showSaves(selectSaving.value,myDivDynamic);
-
-    myDivSaving.appendChild(selectSaving);
-    myDivSaving.appendChild(myInput);
-    myDivSaving.appendChild(myButtonSave);
-    myDivSaving.appendChild(myDivDynamic);
-  }
-
   // Create a list element modifiable with double click and triggering an event with a single click
-  createSaveInput(key, callback) {
+  createSaveInput(folder, key) {
     let el = document.createElement("li");
 
     let text = document.createElement("span");
     text.innerHTML = key;
-    text.addEventListener("click", callback);
+    text.addEventListener("click", () => this.loadSave(folder, key));
+    text.addEventListener("dblclick", () => {
+      input.value = text.innerHTML;
+      input.placeholder = input.value;
+      text.innerHTML = "";
+      text.appendChild(input);
+      input.focus();
+    });
     el.append(text);
+
+    let save = document.createElement("button");
+    save.innerHTML = "✔";
+    save.addEventListener("click", () => this.updateSave(folder, text));
+    el.append(save);
 
     let remove = document.createElement("button");
     remove.innerHTML = "x";
     el.append(remove);
-    
+
     let input = document.createElement("input");
     input.addEventListener("keyup", (e) => {
       if (e.key == "Enter") input.blur();
     });
-    input.addEventListener("blur", (e) => (text.innerHTML = e.target.value));
-
-    text.addEventListener("dblclick", () => {
-      input.value = text.innerHTML;
-      text.innerHTML = "";
-      text.appendChild(input);
-      input.focus();
+    input.addEventListener("blur", (e) => {
+      this.updateSave(folder, e.target);
+      text.innerHTML = e.target.value;
     });
     return el;
   }
@@ -199,101 +161,136 @@ export default class pedalboardGui extends HTMLElement {
     let folders = document.createElement("ul");
     folders.id = "folders";
 
-    keys.forEach((key) =>
-      folders.appendChild(this.createSaveInput(key, () => this.showFolder(key)))
-    );
+    keys.forEach((key) => {
+      let el = document.createElement("li");
+      el.innerHTML = key;
+      el.addEventListener("click", () => this.showFolder(key));
+      folders.appendChild(el);
+    });
 
     return folders;
   }
 
   // Show content of the folder
   showFolder(folder) {
-    let saves = Object.keys(this.folders[folder]);
     this.saves.innerHTML = "";
-    saves.forEach((key) =>
-      this.saves.appendChild(
-        this.createSaveInput(key, () => this.loadSave(folder, key))
-      )
+
+    //TODO Eviter qu'une save ai le même nom
+    let button = document.createElement("button");
+    button.innerHTML = "New Save";
+    button.addEventListener("click", () => {
+      let key = "...";
+      this.saves.appendChild(this.createSaveInput(folder, key));
+      this.folders[folder][key] = { infos: "new Save" };
+      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
+    });
+    this.saves.appendChild(button);
+
+    Object.keys(this.folders[folder]).forEach((key) =>
+      this.saves.appendChild(this.createSaveInput(folder, key))
     );
   }
 
   // Load the save to the audioNode au show it's informations
   loadSave(folder, key) {
-    console.log(folder, key);
-    this.infos.innerHTML = `Categorie: ${folder}</br>Save: ${key}</br>Infos: ${JSON.stringify(
-      this.folders[folder][key]
-    )}`;
+    this.infos.innerHTML = "";
+    this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
+    this.board.innerHTML = "";
+    this._plug.loadSave(this.folders[folder][key]);
+
+    let cat = document.createElement("h4");
+    cat.innerHTML = `Categorie: ${folder}`;
+
+    let name = document.createElement("h4");
+    name.innerHTML = `Name: ${key}`;
+
+    let ul = document.createElement("ul");
+    this.folders[folder][key].forEach((node) => {
+      let li = document.createElement("li");
+      li.innerHTML = node.name;
+      ul.appendChild(li);
+    });
+
+    this.infos.appendChild(cat);
+    this.infos.appendChild(name);
+    this.infos.appendChild(ul);
+  }
+
+  // Update the content of the save in the folder, the name of the save is given by the element
+  updateSave(folder, element) {
+    let key;
+    if (element.tagName == "input") {
+      key = element.value;
+      let oldKey = element.placeholder;
+      if (key != oldKey) {
+        this.folders[folder][key] = this.folders[folder][oldKey];
+        delete this.folders[folder][oldKey];
+      }
+    } else {
+      key = element.innerHTML;
+    }
+    this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
+      this.folders[folder][key] = save;
+      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
+    });
   }
 
   // Add the plugin to the board
   addPlugin(instance, img, id) {
-    let contener = document.createElement("div");
-    contener.id=id;
-    this._root.getElementById("board").appendChild(contener);
     instance.createGui().then((gui) => {
-      contener.draggable = true;
-      contener.ondragstart = (event) => {
+      let wrapper = document.createElement("article");
+      wrapper.draggable = true;
+      wrapper.ondragstart = (event) => {
         event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
         this.DragStartX = event.x;
       };
-      contener.ondragend = (event) => {
-        let origin = event.target;
-        let target = this._root.elementFromPoint(event.x, event.y);
+      wrapper.ondragend = (event) => {
+        let origin = this.getWrapper(event.target);
+        let target = this.getWrapper(
+          this._root.elementFromPoint(event.x, event.y)
+        );
         let parent = target.parentNode;
 
         if (parent == this.board && origin != target) {
           this._plug.pedalboardNode.disconnectNodes(parent.childNodes);
           if (this.DragStartX > event.x) {
-            parent.insertBefore(origin, target);
+            this.board.insertBefore(origin, target);
           } else {
-            parent.insertBefore(target, origin);
+            this.board.insertBefore(target, origin);
           }
           this._plug.pedalboardNode.connectNodes(parent.childNodes);
         }
       };
-      let cross = document.createElement("img");
-      cross.src = './pedalboard/resources/croix.png';
-      cross.id = 'cross';
-      let nameAndCross = document.createElement("div");
-      nameAndCross.append(cross);
-      nameAndCross.innerHTML+=instance.name;
-      nameAndCross.className = "nameAndCross";
+      let infos = document.createElement("header");
+      infos.innerHTML = instance.name;
 
-      contener.appendChild(nameAndCross);
-      contener.appendChild(gui);
-      this._root.getElementById("cross").addEventListener("click", () =>{
-        var board = contener.parentNode;
-        this._plug.pedalboardNode.disconnectNodes(board.childNodes);
-        board.removeChild(contener);
-        this._plug.pedalboardNode.connectNodes(board.childNodes);
+      let cross = document.createElement("img");
+      cross.src = "./pedalboard/Gui/assets/croix.png";
+      cross.addEventListener("click", () => {
+        this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
+        this.board.removeChild(wrapper);
+        this._plug.pedalboardNode.connectNodes(this.board.childNodes);
       });
+
+      infos.append(cross);
+
+      wrapper.appendChild(infos);
+      wrapper.appendChild(gui);
+      wrapper.id = id;
+      wrapper.classList.add("nodeArticle");
+      this._root.getElementById("board").appendChild(wrapper);
     });
   }
 
-  showSaves(folder,container){
-    container.innerHTML = "";
-
-    if(localStorage.getItem(folder) !== null){
-      let jsonTemp = JSON.parse(localStorage.getItem(folder));
-      Object.keys(jsonTemp).forEach((el)=>{
-        let li = document.createElement("li");
-        let myDiv = document.createElement("div");
-        let name = document.createElement("p");
-        name.innerHTML = el;
-        let load = document.createElement("button");
-
-        load.innerHTML = "load";
-        load.addEventListener("click",()=>{
-          let mySave = JSON.parse(localStorage.getItem(folder))[folder][el];
-          this._plug.pedalboardNode.loadSaves(mySave);
-        });
-
-        li.appendChild(myDiv);
-        myDiv.appendChild(name);
-        name.appendChild(load);
-        li.classList.add("save");
-        container.appendChild(li); 
-      })
+  // Return the nodeArticle when selecting child node insted of itself with drag and drop
+  getWrapper(element) {
+    switch (element.tagName) {
+      case "IMG":
+        return element.parentNode.parentNode;
+      case "ARTICLE":
+        return element;
+      default:
+        return element.parentNode;
     }
   }
 

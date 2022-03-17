@@ -1,17 +1,56 @@
 {
   "Rock": {
-    "Nirvana": {
-      "Style": "Grunge / Rock",
-      "Tags": "Grunge - Rock"
-    },
-    "Black Sabbath": {
-      "Style": "Heavy-Metal / Hard-Rock / Stoner / Doom",
-      "Tags": "Hard Rock - Heavy Metal - Rock - Traditional Doom Metal"
-    }
+    "Nirvana": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ],
+    "Black Sabbath": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ]
   },
   "Pop": {
-    "Queen": {},
-    "The Beatles": {},
-    "AC/DC": {}
+    "Queen": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ],
+    "The Beatles": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ],
+    "AC/DC": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ]
   }
 }

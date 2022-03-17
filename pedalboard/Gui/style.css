@@ -4,13 +4,14 @@ img {
 
 #preview {
   border: 1rem ridge rgba(211, 220, 50, 0.6);
+  background-color: #b4b878;
 }
 
 #board {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: cornflowerblue;
+  background-color: lightblue;
   padding: 1rem;
   overflow-x: scroll;
   border: 1rem ridge rgba(71, 71, 66, 0.6);
@@ -54,17 +55,33 @@ img {
 li {
   list-style-type: square;
 }
-#cross{
-  width : 15px;
+
+.nodeArticle {
+  border-radius: 1rem 1rem 2rem 2rem;
+  background-color: black;
+  color: white;
+}
+
+.nodeArticle > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 1rem 0 1rem;
+  text-overflow: ellipsis;
+}
+
+.nodeArticle > header > img {
+  width: 15px;
   height: 15px;
-  padding-right: 10px;
-  margin-top: 5px;
+  filter: contrast(300%);
 }
-.nameAndCross{
-  background-color: gray;
-  border-radius: 1rem;
+
+select {
+  background-color: #b4b878;
+  border: 0;
+  width: 100%;
   text-align: center;
-  vertical-align: middle;
+  font-weight: bold;
+  font-size: 1rem;
+  text-transform: uppercase;
 }
-
-

@@ -75,12 +75,21 @@ export default class PedalBoardPlugin extends WebAudioModule {
     });
   }
 
-  addPedal(pedalName) {
+  loadSave(nodes) {
+    nodes.forEach((el) => {
+      this.addPedal(el.name, el.state);
+    });
+  }
+
+  addPedal(pedalName, state) {
     const { default: WAM } = this.pedals[pedalName].module;
     WAM.createInstance(
       this.pedalboardNode.module._groupId,
       this.pedalboardNode.context
     ).then((instance) => {
+      if (state) {
+        instance.audioNode.setState(state);
+      }
       this.pedalboardNode.addPlugin(instance.audioNode, pedalName, this.id);
       this.gui.addPlugin(instance, this.pedals[pedalName].img, this.id);
       this.id++;
