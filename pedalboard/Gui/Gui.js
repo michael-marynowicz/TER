@@ -90,6 +90,7 @@ export default class pedalboardGui extends HTMLElement {
       window.localStorage["pedalBoardSaves"] = JSON.stringify(json);
     }
     this.folders = JSON.parse(window.localStorage["pedalBoardSaves"]);
+    console.log(this.folders);
 
     let keys = Object.keys(this.folders);
 
@@ -143,6 +144,7 @@ export default class pedalboardGui extends HTMLElement {
 
     let remove = document.createElement("button");
     remove.innerHTML = "x";
+    remove.addEventListener("click", () => this.deleteSave(folder, key,el));
     el.append(remove);
 
     let input = document.createElement("input");
@@ -175,6 +177,9 @@ export default class pedalboardGui extends HTMLElement {
   showFolder(folder) {
     this.saves.innerHTML = "";
 
+
+
+
     //TODO Eviter qu'une save ai le même nom
     let button = document.createElement("button");
     button.innerHTML = "New Save";
@@ -186,9 +191,9 @@ export default class pedalboardGui extends HTMLElement {
     });
     this.saves.appendChild(button);
 
-    Object.keys(this.folders[folder]).forEach((key) =>
+    Object.keys(this.folders[folder]).forEach((key) =>{
       this.saves.appendChild(this.createSaveInput(folder, key))
-    );
+    });
   }
 
   // Load the save to the audioNode au show it's informations
@@ -214,6 +219,12 @@ export default class pedalboardGui extends HTMLElement {
     this.infos.appendChild(cat);
     this.infos.appendChild(name);
     this.infos.appendChild(ul);
+  }
+
+  deleteSave(folder,element,el){
+    delete this.folders[folder][element];
+    window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
+    this.saves.removeChild(el);
   }
 
   // Update the content of the save in the folder, the name of the save is given by the element
