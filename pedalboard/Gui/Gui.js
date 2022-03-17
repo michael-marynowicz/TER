@@ -227,13 +227,16 @@ export default class pedalboardGui extends HTMLElement {
 
   // Add the plugin to the board
   addPlugin(instance, img, id) {
+    let contener = document.createElement("div");
+    contener.id=id;
+    this._root.getElementById("board").appendChild(contener);
     instance.createGui().then((gui) => {
-      gui.draggable = true;
-      gui.ondragstart = (event) => {
+      contener.draggable = true;
+      contener.ondragstart = (event) => {
         event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
         this.DragStartX = event.x;
       };
-      gui.ondragend = (event) => {
+      contener.ondragend = (event) => {
         let origin = event.target;
         let target = this._root.elementFromPoint(event.x, event.y);
         let parent = target.parentNode;
@@ -248,8 +251,22 @@ export default class pedalboardGui extends HTMLElement {
           this._plug.pedalboardNode.connectNodes(parent.childNodes);
         }
       };
-      gui.id = id;
-      this._root.getElementById("board").appendChild(gui);
+      let cross = document.createElement("img");
+      cross.src = './pedalboard/resources/croix.png';
+      cross.id = 'cross';
+      let nameAndCross = document.createElement("div");
+      nameAndCross.append(cross);
+      nameAndCross.innerHTML+=instance.name;
+      nameAndCross.className = "nameAndCross";
+
+      contener.appendChild(nameAndCross);
+      contener.appendChild(gui);
+      this._root.getElementById("cross").addEventListener("click", () =>{
+        var board = contener.parentNode;
+        this._plug.pedalboardNode.disconnectNodes(board.childNodes);
+        board.removeChild(contener);
+        this._plug.pedalboardNode.connectNodes(board.childNodes);
+      });
     });
   }
 
@@ -258,7 +275,7 @@ export default class pedalboardGui extends HTMLElement {
 
     if(localStorage.getItem(folder) !== null){
       let jsonTemp = JSON.parse(localStorage.getItem(folder));
-      Object.keys(jsonTemp[folder]).forEach((el)=>{
+      Object.keys(jsonTemp).forEach((el)=>{
         let li = document.createElement("li");
         let myDiv = document.createElement("div");
         let name = document.createElement("p");

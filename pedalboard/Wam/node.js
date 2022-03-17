@@ -78,10 +78,8 @@ export default class PedalBoardNode extends CompositeAudioNode {
       });
       if(localStorage.getItem(folder) === null) localStorage.setItem(folder,"{}");
       let jsonTemp = JSON.parse(localStorage.getItem(folder));
-      jsonTemp[folder] = {}
-      jsonTemp[folder][key] = mySave;
+      jsonTemp[key] = mySave;
       localStorage.setItem(folder, JSON.stringify(jsonTemp));
-      console.log(localStorage.getItem(folder));
     });
   }
 
