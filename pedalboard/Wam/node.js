@@ -61,4 +61,33 @@ export default class PedalBoardNode extends CompositeAudioNode {
     console.log(this._wamNode.module.pedals[pedalName]);
     this.nodes[id] = { name: pedalName, node: audioNode };
   }
+  
+  saveNodes(nodes,folder,key){
+    let mySave = [];
+    let promises = [];
+    nodes.forEach((el)=>{
+      promises.push(this.nodes[el.id].node.getState());
+      mySave.push({"url": this.nodes[el.id].node.module._baseURL })
+    })
+    Promise.all(promises).then((values) => {
+      let index = 0;
+      values.forEach((el)=>{
+        mySave[index]["state"] = el;
+        index++;
+        
+      });
+      if(localStorage.getItem(folder) === null) localStorage.setItem(folder,"{}");
+      let jsonTemp = JSON.parse(localStorage.getItem(folder));
+      jsonTemp[folder] = {}
+      jsonTemp[folder][key] = mySave;
+      localStorage.setItem(folder, JSON.stringify(jsonTemp));
+      console.log(localStorage.getItem(folder));
+    });
+  }
+
+  loadSaves(myArr){
+    myArr.forEach((element)=>{
+      console.log(element)
+    });
+  }
 }

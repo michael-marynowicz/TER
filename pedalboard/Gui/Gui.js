@@ -99,7 +99,7 @@ export default class pedalboardGui extends HTMLElement {
     
     //Input Saving
     
-    this.saves.appendChild(this.createDivForSaving());
+    this.createDivForSaving(this.saves);
     //-----------
     this.infos = document.createElement("infos");
     this.infos.id = "infos";
@@ -120,11 +120,15 @@ export default class pedalboardGui extends HTMLElement {
     return savesInfos;
   }
 
-  createDivForSaving(){
+  createDivForSaving(container){
 
     //  container
     let myDivSaving = document.createElement("div");
-    
+    container.appendChild(myDivSaving);
+
+    //  div
+    let myDivDynamic = document.createElement("div");
+
     //  select
     let selectSaving = document.createElement("select");
     selectSaving.id = "saveSelect";
@@ -135,7 +139,10 @@ export default class pedalboardGui extends HTMLElement {
       selectSaving.appendChild(optTemp);
     })
     selectSaving.style = "padding: 2px";
-    
+    selectSaving.addEventListener("change",()=>{
+      this.showSaves(selectSaving.value,myDivDynamic);
+    });
+
     //  input
     let myInput = document.createElement("input");
     myInput.id = "saveName";
@@ -143,21 +150,20 @@ export default class pedalboardGui extends HTMLElement {
     
     //  button
     let myButtonSave = document.createElement("button");
-    myButtonSave.innerHTML = "+";
+    myButtonSave.innerHTML = "save";
+
+    
     myButtonSave.addEventListener("click", ()=>{
-      console.log(this._plug.pedalboardNode.nodes);
-      let arraySave = [];
-      for (let index = 0; index < Object.keys(this._plug.pedalboardNode.nodes).length; index++) {
-        let element = this._plug.pedalboardNode.nodes[index];
-        console.log(element._output.baseURL);
-      }
-      //this.saveAfile(selectSaving.value,myInput.value);
+      this._plug.pedalboardNode.saveNodes(this.board.childNodes,selectSaving.value,myInput.value);
+      this.showSaves(selectSaving.value,myDivDynamic)
     })
+
+    this.showSaves(selectSaving.value,myDivDynamic);
 
     myDivSaving.appendChild(selectSaving);
     myDivSaving.appendChild(myInput);
     myDivSaving.appendChild(myButtonSave);
-    return myDivSaving;
+    myDivSaving.appendChild(myDivDynamic);
   }
 
   // Create a list element modifiable with double click and triggering an event with a single click
@@ -211,12 +217,6 @@ export default class pedalboardGui extends HTMLElement {
     );
   }
 
-  saveAfile(folder,key,arraySave){
-    if (Cache[folder] === undefined)Cache[folder] = {};
-    Cache[folder][key] = [];
-    console.log(Cache[folder]);
-  }
-
   // Load the save to the audioNode au show it's informations
   loadSave(folder, key) {
     console.log(folder, key);
@@ -251,6 +251,33 @@ export default class pedalboardGui extends HTMLElement {
       gui.id = id;
       this._root.getElementById("board").appendChild(gui);
     });
+  }
+
+  showSaves(folder,container){
+    container.innerHTML = "";
+
+    if(localStorage.getItem(folder) !== null){
+      let jsonTemp = JSON.parse(localStorage.getItem(folder));
+      Object.keys(jsonTemp[folder]).forEach((el)=>{
+        let li = document.createElement("li");
+        let myDiv = document.createElement("div");
+        let name = document.createElement("p");
+        name.innerHTML = el;
+        let load = document.createElement("button");
+
+        load.innerHTML = "load";
+        load.addEventListener("click",()=>{
+          let mySave = JSON.parse(localStorage.getItem(folder))[folder][el];
+          this._plug.pedalboardNode.loadSaves(mySave);
+        });
+
+        li.appendChild(myDiv);
+        myDiv.appendChild(name);
+        name.appendChild(load);
+        li.classList.add("save");
+        container.appendChild(li); 
+      })
+    }
   }
 
   // Link the css
