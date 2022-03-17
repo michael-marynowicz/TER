@@ -90,7 +90,6 @@ export default class pedalboardGui extends HTMLElement {
       window.localStorage["pedalBoardSaves"] = JSON.stringify(json);
     }
     this.folders = JSON.parse(window.localStorage["pedalBoardSaves"]);
-    console.log(this.folders);
 
     let keys = Object.keys(this.folders);
 
@@ -221,10 +220,10 @@ export default class pedalboardGui extends HTMLElement {
     this.infos.appendChild(ul);
   }
 
-  deleteSave(folder,element,el){
-    delete this.folders[folder][element];
+  deleteSave(folder,key,node){
+    delete this.folders[folder][key];
     window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
-    this.saves.removeChild(el);
+    this.saves.removeChild(node);
   }
 
   // Update the content of the save in the folder, the name of the save is given by the element
