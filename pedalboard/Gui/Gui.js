@@ -138,7 +138,7 @@ export default class pedalboardGui extends HTMLElement {
 
     let save = document.createElement("button");
     save.innerHTML = "✔";
-    save.addEventListener("click", () => this.updateSave(folder, text));
+    save.addEventListener("click", () => this.updateSave(folder, text,save));
     el.append(save);
 
     let remove = document.createElement("button");
@@ -150,10 +150,8 @@ export default class pedalboardGui extends HTMLElement {
     input.addEventListener("keyup", (e) => {
       if (e.key == "Enter") input.blur();
     });
-    input.addEventListener("blur", (e) => {
-      this.updateSave(folder, e.target);
-      text.innerHTML = e.target.value;
-    });
+    input.addEventListener("blur", (e) =>
+        text.innerHTML = this.updateSave(folder, e.target) ? e.target.value : e.target.placeholder);
     return el;
   }
 
@@ -226,20 +224,25 @@ export default class pedalboardGui extends HTMLElement {
   // Update the content of the save in the folder, the name of the save is given by the element
   updateSave(folder, element) {
     let key;
-    if (element.tagName == "input") {
+    if (element.tagName === "INPUT") {
       key = element.value;
       let oldKey = element.placeholder;
+      if(this.folders[folder][element.value]){
+        alert("name already used");
+        return false;
+      }
       if (key != oldKey) {
         this.folders[folder][key] = this.folders[folder][oldKey];
         delete this.folders[folder][oldKey];
       }
     } else {
-      key = element.innerHTML;
+      key= element.innerHTML;
     }
     this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
       this.folders[folder][key] = save;
       window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
     });
+    return true;
   }
 
   // Add the plugin to the board
@@ -278,9 +281,7 @@ export default class pedalboardGui extends HTMLElement {
         this.board.removeChild(wrapper);
         this._plug.pedalboardNode.connectNodes(this.board.childNodes);
       });
-
       infos.append(cross);
-
       wrapper.appendChild(infos);
       wrapper.appendChild(gui);
       wrapper.id = id;
