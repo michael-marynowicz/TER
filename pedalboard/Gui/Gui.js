@@ -18,6 +18,7 @@ export default class pedalboardGui extends HTMLElement {
 
     this.board = document.createElement("div");
     this.board.id = "board";
+    this.dragEvent = { end: false };
     this._root.appendChild(this.board);
 
     this.saveMenu = await this.loadSaves();
@@ -249,25 +250,12 @@ export default class pedalboardGui extends HTMLElement {
       wrapper.draggable = true;
       wrapper.ondragstart = (event) => {
         event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
-        this.DragStartX = event.x;
+        this.dragEvent = { x: event.x, origin: wrapper, end: false };
       };
-      wrapper.ondragend = (event) => {
-        let origin = this.getWrapper(event.target);
-        let target = this.getWrapper(
-          this._root.elementFromPoint(event.x, event.y)
-        );
-        let parent = target.parentNode;
+      wrapper.ondragend = () => {
+        this.dragEvent.end = true;
+      };
 
-        if (parent == this.board && origin != target) {
-          this._plug.pedalboardNode.disconnectNodes(parent.childNodes);
-          if (this.DragStartX > event.x) {
-            this.board.insertBefore(origin, target);
-          } else {
-            this.board.insertBefore(target, origin);
-          }
-          this._plug.pedalboardNode.connectNodes(parent.childNodes);
-        }
-      };
       let infos = document.createElement("header");
       infos.innerHTML = instance.name;
 
@@ -285,7 +273,27 @@ export default class pedalboardGui extends HTMLElement {
       wrapper.appendChild(gui);
       wrapper.id = id;
       wrapper.classList.add("nodeArticle");
-      this._root.getElementById("board").appendChild(wrapper);
+
+      this.board.addEventListener("mouseover", (event) => {
+        if (this.dragEvent.end) {
+          let origin = this.dragEvent.origin;
+          let target = this.getWrapper(
+            this._root.elementFromPoint(event.x, event.y)
+          );
+
+          if (target.parentNode == this.board && origin != target) {
+            this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
+            this.board.insertBefore(
+              origin,
+              this.dragEvent.x > event.x ? target : target.nextSibling
+            );
+            this._plug.pedalboardNode.connectNodes(this.board.childNodes);
+          }
+          this.dragEvent.end = false;
+        }
+      });
+
+      this.board.appendChild(wrapper);
     });
   }
 
