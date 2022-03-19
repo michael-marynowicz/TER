@@ -48,7 +48,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
   }
 
   async fetchPedals() {
-    let repos = await fetch("../pedalboard/repositories.json");
+    let repos = await fetch("./pedalboard/repositories.json");
     let json2 = await repos.json();
     let files = await Promise.allSettled(json2.map((el) => fetch(el)));
     let urls = await Promise.all(
