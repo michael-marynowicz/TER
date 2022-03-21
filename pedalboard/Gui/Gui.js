@@ -124,26 +124,33 @@ export default class pedalboardGui extends HTMLElement {
   // Create a list element modifiable with double click and triggering an event with a single click
   createSaveInput(folder, key) {
     let el = document.createElement("li");
+    el.classList.add("saveElement");
 
     let text = document.createElement("span");
     text.innerHTML = key;
-    text.addEventListener("click", () => this.loadSave(folder, key));
-    text.addEventListener("dblclick", () => {
+    const load = () => this.loadSave(folder, text.innerHTML);
+    text.addEventListener("click", load);
+    el.append(text);
+
+    let save = document.createElement("button");
+    save.classList.add("saveButton");
+    save.addEventListener("click", () => this.updateSave(folder, text, save));
+    el.append(save);
+
+    let edit = document.createElement("button");
+    edit.classList.add("editButton");
+    edit.addEventListener("click", () => {
+      text.removeEventListener("click", load);
       input.value = text.innerHTML;
       input.placeholder = input.value;
       text.innerHTML = "";
       text.appendChild(input);
       input.focus();
     });
-    el.append(text);
-
-    let save = document.createElement("button");
-    save.innerHTML = "✔";
-    save.addEventListener("click", () => this.updateSave(folder, text,save));
-    el.append(save);
+    el.append(edit);
 
     let remove = document.createElement("button");
-    remove.innerHTML = "x";
+    remove.classList.add("removeButton");
     remove.addEventListener("click", () => this.deleteSave(folder, key, el));
     el.append(remove);
 
@@ -151,8 +158,15 @@ export default class pedalboardGui extends HTMLElement {
     input.addEventListener("keyup", (e) => {
       if (e.key == "Enter") input.blur();
     });
-    input.addEventListener("blur", (e) =>
-        text.innerHTML = this.updateSave(folder, e.target) ? e.target.value : e.target.placeholder);
+    input.addEventListener("blur", (e) => {
+      let canUpdateSaveName = this.updateSave(folder, e.target);
+      if (canUpdateSaveName) {
+        text.innerHTML = e.target.value;
+        text.addEventListener("click", load);
+      } else {
+        setTimeout(() => input.focus(), 1);
+      }
+    });
     return el;
   }
 
@@ -179,10 +193,12 @@ export default class pedalboardGui extends HTMLElement {
     let button = document.createElement("button");
     button.innerHTML = "New Save";
     button.addEventListener("click", () => {
-      let key = "...";
-      this.saves.appendChild(this.createSaveInput(folder, key));
+      const key = "";
+      let saveInput = this.createSaveInput(folder, key);
+      this.saves.appendChild(saveInput);
       this.folders[folder][key] = { infos: "new Save" };
       window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
+      saveInput.lastChild.previousSibling.click();
     });
     this.saves.appendChild(button);
 
@@ -227,22 +243,26 @@ export default class pedalboardGui extends HTMLElement {
     let key;
     if (element.tagName === "INPUT") {
       key = element.value;
-      let oldKey = element.placeholder;
-      if(this.folders[folder][element.value]){
-        alert("name already used");
+      if (key == "") {
+        alert("invalid name");
         return false;
       }
+      let oldKey = element.placeholder;
       if (key != oldKey) {
+        if (this.folders[folder][key]) {
+          alert("name already used");
+          return false;
+        }
         this.folders[folder][key] = this.folders[folder][oldKey];
         delete this.folders[folder][oldKey];
       }
     } else {
-      key= element.innerHTML;
+      key = element.innerHTML;
+      this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
+        this.folders[folder][key] = save;
+      });
     }
-    this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
-      this.folders[folder][key] = save;
-      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
-    });
+    window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
     return true;
   }
 
@@ -278,16 +298,11 @@ export default class pedalboardGui extends HTMLElement {
       this.board.addEventListener("mouseover", (event) => {
         if (this.dragEvent.end) {
           let origin = this.dragEvent.origin;
-          let target = this.getWrapper(
-            this._root.elementFromPoint(event.x, event.y)
-          );
+          let target = this.getWrapper(this._root.elementFromPoint(event.x, event.y));
 
           if (target.parentNode == this.board && origin != target) {
             this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
-            this.board.insertBefore(
-              origin,
-              this.dragEvent.x > event.x ? target : target.nextSibling
-            );
+            this.board.insertBefore(origin, this.dragEvent.x > event.x ? target : target.nextSibling);
             this._plug.pedalboardNode.connectNodes(this.board.childNodes);
           }
           this.dragEvent.end = false;

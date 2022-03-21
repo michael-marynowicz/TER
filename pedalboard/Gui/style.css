@@ -85,3 +85,28 @@ select {
   font-size: 1rem;
   text-transform: uppercase;
 }
+
+.saveElement {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.saveButton,
+.editButton,
+.removeButton {
+  border: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+.saveButton {
+  background: url(./assets/saveButton.svg) no-repeat left top;
+}
+
+.editButton {
+  background: url(./assets/editButton.svg) no-repeat left top;
+}
+
+.removeButton {
+  background: url(./assets/deleteButton.svg) no-repeat left top;
+}
