@@ -307,12 +307,14 @@ export default class pedalboardGui extends HTMLElement {
   }
 
   // Create a save modifiable with the buttons to it's right, it can hold the informations about the plugins.
-  createSaveElement(categorieNameCallBack, save) {
+  createSaveElement(categorieNameCallBack, saveName) {
+    const categorie = categorieNameCallBack();
+
     let el = document.createElement("li");
     el.classList.add("saveElement");
 
     let text = document.createElement("span");
-    text.innerHTML = save;
+    text.innerHTML = saveName;
     const clickEventCallBack = () => this.loadSave(categorieNameCallBack, text.innerHTML);
     text.addEventListener("click", clickEventCallBack);
     el.append(text);
@@ -322,7 +324,7 @@ export default class pedalboardGui extends HTMLElement {
       if (e.key == "Enter") input.blur();
     });
     input.addEventListener("blur", (e) => {
-      if (this.renameSave(categorieNameCallBack(), element.placeholder, element.value)) {
+      if (this.renameSave(categorie, e.target.placeholder, e.target.value)) {
         text.innerHTML = e.target.value;
         text.addEventListener("click", clickEventCallBack);
       } else {
@@ -334,7 +336,7 @@ export default class pedalboardGui extends HTMLElement {
     save.classList.add("saveButton");
     save.addEventListener("click", () => {
       this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
-        this.folders[categorie][element.innerHTML] = save;
+        this.folders[categorie][text.innerHTML] = save;
       });
       window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
     });
