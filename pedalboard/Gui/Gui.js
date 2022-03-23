@@ -97,7 +97,8 @@ export default class pedalboardGui extends HTMLElement {
     let savesInfos = document.createElement("div");
     savesInfos.id = "savesInfos";
 
-    let folders = this.createFolders(keys);
+    this.categories = this.createFolders(keys);
+    this.categories.id = "categories";
 
     this.saves = document.createElement("ul");
     this.saves.id = "saves";
@@ -115,32 +116,46 @@ export default class pedalboardGui extends HTMLElement {
     savesInfos.appendChild(foldersTitle);
     savesInfos.appendChild(savesTitle);
     savesInfos.appendChild(infosTitle);
-    savesInfos.appendChild(folders);
+    savesInfos.appendChild(this.categories);
     savesInfos.appendChild(this.saves);
     savesInfos.appendChild(this.infos);
     return savesInfos;
   }
 
   // Create a list element modifiable with double click and triggering an event with a single click
-  createSaveInput(folder, key) {
+  createSaveElement(folderNameCallBack, key) {
     let el = document.createElement("li");
     el.classList.add("saveElement");
 
     let text = document.createElement("span");
     text.innerHTML = key;
-    const load = () => this.loadSave(folder, text.innerHTML);
-    text.addEventListener("click", load);
+    const clickEventCallBack = () => this.loadSave(folderNameCallBack, text.innerHTML);
+    text.addEventListener("click", clickEventCallBack);
     el.append(text);
+
+    let input = document.createElement("input");
+    input.addEventListener("keyup", (e) => {
+      if (e.key == "Enter") input.blur();
+    });
+    input.addEventListener("blur", (e) => {
+      let canUpdateSaveName = this.updateSave(folderNameCallBack, e.target);
+      if (canUpdateSaveName) {
+        text.innerHTML = e.target.value;
+        text.addEventListener("click", clickEventCallBack);
+      } else {
+        setTimeout(() => input.focus(), 1);
+      }
+    });
 
     let save = document.createElement("button");
     save.classList.add("saveButton");
-    save.addEventListener("click", () => this.updateSave(folder, text, save));
+    save.addEventListener("click", () => this.updateSave(folderNameCallBack, text, save));
     el.append(save);
 
     let edit = document.createElement("button");
     edit.classList.add("editButton");
     edit.addEventListener("click", () => {
-      text.removeEventListener("click", load);
+      text.removeEventListener("click", clickEventCallBack);
       input.value = text.innerHTML;
       input.placeholder = input.value;
       text.innerHTML = "";
@@ -151,34 +166,74 @@ export default class pedalboardGui extends HTMLElement {
 
     let remove = document.createElement("button");
     remove.classList.add("removeButton");
-    remove.addEventListener("click", () => this.deleteSave(folder, key, el));
+    remove.addEventListener("click", () => this.deleteSave(folderNameCallBack, () => text.innerHTML, el));
     el.append(remove);
+
+    return el;
+  }
+
+  createCategorieElement(name) {
+    let el = document.createElement("li");
+    el.classList.add("categorieElement");
+
+    const clickEventCallBack = () => this.showFolder(() => text.innerHTML);
+
+    let text = document.createElement("span");
+    text.innerHTML = name;
+    text.addEventListener("click", clickEventCallBack);
+    el.appendChild(text);
 
     let input = document.createElement("input");
     input.addEventListener("keyup", (e) => {
       if (e.key == "Enter") input.blur();
     });
     input.addEventListener("blur", (e) => {
-      let canUpdateSaveName = this.updateSave(folder, e.target);
-      if (canUpdateSaveName) {
+      if (this.renameFolder(e.target.placeholder, e.target.value)) {
         text.innerHTML = e.target.value;
-        text.addEventListener("click", load);
+        text.addEventListener("click", clickEventCallBack);
       } else {
         setTimeout(() => input.focus(), 1);
       }
     });
+
+    let edit = document.createElement("button");
+    edit.classList.add("editButton");
+    edit.addEventListener("click", () => {
+      text.removeEventListener("click", clickEventCallBack);
+      input.value = text.innerHTML;
+      input.placeholder = input.value;
+      text.innerHTML = "";
+      text.appendChild(input);
+      input.focus();
+    });
+    el.append(edit);
+
+    let remove = document.createElement("button");
+    remove.classList.add("removeButton");
+    remove.addEventListener("click", () => this.deleteFolder(() => text.innerHTML, el));
+    el.append(remove);
+
     return el;
   }
 
   // Create the list of folders
   createFolders(keys) {
     let folders = document.createElement("ul");
-    folders.id = "folders";
 
-    keys.forEach((key) => {
-      let el = document.createElement("li");
-      el.innerHTML = key;
-      el.addEventListener("click", () => this.showFolder(key));
+    let button = document.createElement("button");
+    button.innerHTML = "New Categorie";
+    button.addEventListener("click", () => {
+      const key = "";
+      let saveInput = this.createCategorieElement(key);
+      this.categories.appendChild(saveInput);
+      this.folders[key] = [];
+      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
+      saveInput.lastChild.previousSibling.click();
+    });
+    folders.appendChild(button);
+
+    keys.forEach((folder) => {
+      let el = this.createCategorieElement(folder);
       folders.appendChild(el);
     });
 
@@ -186,29 +241,29 @@ export default class pedalboardGui extends HTMLElement {
   }
 
   // Show content of the folder
-  showFolder(folder) {
+  showFolder(folderNameCallBack) {
     this.saves.innerHTML = "";
-
-    //TODO Eviter qu'une save ai le même nom
+    const folder = folderNameCallBack();
     let button = document.createElement("button");
     button.innerHTML = "New Save";
     button.addEventListener("click", () => {
       const key = "";
-      let saveInput = this.createSaveInput(folder, key);
+      let saveInput = this.createSaveElement(folderNameCallBack, key);
       this.saves.appendChild(saveInput);
-      this.folders[folder][key] = { infos: "new Save" };
+      this.folders[folder][key] = [];
       window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
       saveInput.lastChild.previousSibling.click();
     });
     this.saves.appendChild(button);
 
     Object.keys(this.folders[folder]).forEach((key) => {
-      this.saves.appendChild(this.createSaveInput(folder, key));
+      this.saves.appendChild(this.createSaveElement(folderNameCallBack, key));
     });
   }
 
   // Load the save to the audioNode au show it's informations
-  loadSave(folder, key) {
+  loadSave(folderNameCallBack, key) {
+    const folder = folderNameCallBack();
     this.infos.innerHTML = "";
     this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
     this.board.innerHTML = "";
@@ -232,35 +287,65 @@ export default class pedalboardGui extends HTMLElement {
     this.infos.appendChild(ul);
   }
 
-  deleteSave(folder, key, node) {
-    delete this.folders[folder][key];
+  deleteSave(folderNameCallBack, saveNameCallBack, node) {
+    delete this.folders[folderNameCallBack()][saveNameCallBack()];
     window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
     this.saves.removeChild(node);
   }
 
+  deleteFolder(folderNameCallBack, node) {
+    const folder = folderNameCallBack();
+    if (Object.keys(this.folders[folder]).length != 0) {
+      alert("Empty the folder before trying to delete it");
+    } else {
+      delete this.folders[folder];
+      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
+      this.categories.removeChild(node);
+    }
+  }
+
   // Update the content of the save in the folder, the name of the save is given by the element
-  updateSave(folder, element) {
-    let key;
+  updateSave(folderNameCallBack, element) {
+    const folder = folderNameCallBack();
     if (element.tagName === "INPUT") {
-      key = element.value;
-      if (key == "") {
-        alert("invalid name");
+      return this.renameSave(folder, element.placeholder, element.value);
+    } else {
+      this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
+        this.folders[folder][element.innerHTML] = save;
+      });
+    }
+    window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
+    return true;
+  }
+
+  renameSave(folder, oldName, newName) {
+    if (newName.trim().length == 0) {
+      alert("Invalid save name");
+      return false;
+    }
+    if (newName != oldName) {
+      if (this.folders[folder][newName]) {
+        alert("This save name is already used");
         return false;
       }
-      let oldKey = element.placeholder;
-      if (key != oldKey) {
-        if (this.folders[folder][key]) {
-          alert("name already used");
-          return false;
-        }
-        this.folders[folder][key] = this.folders[folder][oldKey];
-        delete this.folders[folder][oldKey];
+      this.folders[folder][newName] = this.folders[folder][oldName];
+      delete this.folders[folder][oldName];
+    }
+    return true;
+  }
+
+  renameFolder(oldName, newName) {
+    if (newName.trim().length == 0) {
+      alert("Invalid folder name");
+      return false;
+    }
+    if (newName != oldName) {
+      if (this.folders[newName]) {
+        alert("This folder name is already used");
+        return false;
       }
-    } else {
-      key = element.innerHTML;
-      this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
-        this.folders[folder][key] = save;
-      });
+      this.folders[newName] = this.folders[oldName];
+      delete this.folders[oldName];
     }
     window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
     return true;

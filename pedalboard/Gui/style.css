@@ -28,7 +28,7 @@ img {
   margin: 0;
 }
 
-#folders,
+#categories,
 #saves,
 #infos,
 #savesInfos > h1 {
@@ -41,7 +41,7 @@ img {
   border-right: none;
 }
 
-#folders,
+#categories,
 #saves,
 #infos {
   border-top: none;
@@ -86,9 +86,21 @@ select {
   text-transform: uppercase;
 }
 
-.saveElement {
+.saveElement,
+.categorieElement {
   display: flex;
-  gap: 0.5rem;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.saveElement > span,
+.categorieElement > span {
+  flex-grow: 1;
+}
+
+.saveElement > span > input,
+.categorieElement > span > input {
+  width: 95%;
 }
 
 .saveButton,
@@ -97,6 +109,7 @@ select {
   border: none;
   width: 1rem;
   height: 1rem;
+  margin-right: 0.5rem;
 }
 
 .saveButton {
