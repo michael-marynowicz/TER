@@ -187,6 +187,7 @@ export default class pedalboardGui extends HTMLElement {
 
     let button = document.createElement("button");
     button.innerHTML = "New Categorie";
+    button.classList.add("addBtn");
     button.addEventListener("click", () => {
       const categorie = "";
       let saveInput = this.createCategorieElement(categorie);
@@ -211,6 +212,7 @@ export default class pedalboardGui extends HTMLElement {
     const categorie = categorieNameCallBack();
     let button = document.createElement("button");
     button.innerHTML = "New Save";
+    button.classList.add("addBtn");
     button.addEventListener("click", () => {
       const save = "";
       let saveInput = this.createSaveElement(categorieNameCallBack, save);
