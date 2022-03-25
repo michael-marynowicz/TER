@@ -10,7 +10,7 @@ const getBasetUrl = (relativeURL) => {
 export default class pedalboardGui extends HTMLElement {
   _baseURL = getBasetUrl(new URL(".", import.meta.url));
 
-  _savesUrl = `${new URL(".", import.meta.url).origin}/saves.json`;
+  _savesUrl = `${new URL(".", import.meta.url).origin}/pedalboard/saves.json`;
 
   _saveSVGUrl = `${this._baseURL}/assets/saveButton.svg`;
   _editSVGUrl = `${this._baseURL}/assets/editButton.svg`;
@@ -25,8 +25,8 @@ export default class pedalboardGui extends HTMLElement {
 
     this._root = this.attachShadow({ mode: "open" });
 
-    this.init();
     console.log(_baseURL);
+    this.init();
   }
 
   // Initlialise the differents elements of the gui
