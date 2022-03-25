@@ -10,7 +10,7 @@ const getBasetUrl = (relativeURL) => {
 export default class pedalboardGui extends HTMLElement {
   _baseURL = getBasetUrl(new URL(".", import.meta.url));
 
-  _savesUrl = `${new URL(".", import.meta.url).origin}/pedalboard/saves.json`;
+  _savesUrl = `${new URL(".", import.meta.url).origin}/saves.json`;
 
   _saveSVGUrl = `${this._baseURL}/assets/saveButton.svg`;
   _editSVGUrl = `${this._baseURL}/assets/editButton.svg`;
