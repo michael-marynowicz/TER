@@ -41,6 +41,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
     });
 
     this.lastNode.connect(this._output);
+    this.updateInfos();
   }
 
   disconnectNodes(nodes) {
@@ -64,6 +65,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
   addPlugin(audioNode, pedalName, id) {
     this.connectPlugin(audioNode);
     this.nodes[id] = { name: pedalName, node: audioNode };
+    this.updateInfos();
   }
 
   async getState(nodes) {
@@ -74,6 +76,14 @@ export default class PedalBoardNode extends CompositeAudioNode {
       name: this.nodes[ids[index]].name,
       state: el,
     }));
+  }
+
+  updateInfos() {
+    this._wamNode.dispatchEvent(
+      new CustomEvent("wam-info", {
+        detail: { data: this },
+      })
+    );
   }
 
   async getParameterInfo() {
@@ -92,7 +102,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
         pedalNames[pedalName] = 0;
       }
 
-      infos.forEach((key, j) => {
+      infos.forEach((key) => {
         let info = child[key];
         info.id = id;
         id += 1;

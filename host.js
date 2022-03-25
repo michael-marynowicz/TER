@@ -49,11 +49,4 @@ const mountPlugin = (domNode) => {
   player.onplay = () => {
     audioContext.resume(); // audio context must be resumed because browser restrictions
   };
-
-  let button = document.createElement("button");
-  button.innerHTML = "CLICK";
-  button.addEventListener("click", () => {
-    instance.audioNode.getParameterInfo().then((res) => console.log(res));
-  });
-  document.body.appendChild(button);
 })();

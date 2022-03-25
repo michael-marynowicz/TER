@@ -1,4 +1,23 @@
+/**
+ * @param {URL} relativeURL
+ * @returns {string}
+ */
+const getBasetUrl = (relativeURL) => {
+  const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
+  return baseURL;
+};
+
 export default class pedalboardGui extends HTMLElement {
+  _baseURL = getBasetUrl(new URL(".", import.meta.url));
+
+  _savesUrl = `${new URL(".", import.meta.url).origin}/pedalboard/saves.json`;
+
+  _saveSVGUrl = `${this._baseURL}/assets/saveButton.svg`;
+  _editSVGUrl = `${this._baseURL}/assets/editButton.svg`;
+  _deleteSVGUrl = `${this._baseURL}/assets/deleteButton.svg`;
+  _crossIMGUrl = `${this._baseURL}/assets/cross.png`;
+  _notFoundIMGUrl = `${this._baseURL}/assets/notfound.jpg`;
+
   constructor(plug) {
     super();
     this._plug = plug;
@@ -41,7 +60,7 @@ export default class pedalboardGui extends HTMLElement {
         });
         let thumbnail = pedal.descriptor.thumbnail;
         if (thumbnail == "") {
-          return "../pedalboard/Gui/assets/notfound.jpg";
+          return this._notFoundIMGUrl;
         }
         return `${pedal.url}${thumbnail}`;
       })
@@ -72,6 +91,7 @@ export default class pedalboardGui extends HTMLElement {
     urls.forEach((el, index) => {
       let img = document.createElement("img");
       img.src = el;
+      img.setAttribute("crossorigin", "anonymous");
       img.addEventListener("click", () => this._plug.addPedal(pedals[index]), {
         passive: false,
       });
@@ -100,7 +120,8 @@ export default class pedalboardGui extends HTMLElement {
       infos.innerHTML = instance.name;
 
       let cross = document.createElement("img");
-      cross.src = "./pedalboard/Gui/assets/croix.png";
+      cross.src = this._crossIMGUrl;
+      cross.setAttribute("crossorigin", "anonymous");
       cross.addEventListener("click", () => {
         this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
         this.board.removeChild(wrapper);
@@ -145,7 +166,7 @@ export default class pedalboardGui extends HTMLElement {
   // Create the save panel.
   async loadSaves() {
     if (window.localStorage["pedalBoardSaves"] == undefined) {
-      let file = await fetch("../pedalboard/saves.json");
+      let file = await fetch(this._savesUrl);
       let json = await file.json();
       window.localStorage["pedalBoardSaves"] = JSON.stringify(json);
     }
@@ -162,7 +183,7 @@ export default class pedalboardGui extends HTMLElement {
     this.saves = document.createElement("ul");
     this.saves.id = "saves";
 
-    this.infos = document.createElement("infos");
+    this.infos = document.createElement("div");
     this.infos.id = "infos";
 
     let categoriesTitle = document.createElement("h1");
@@ -334,32 +355,31 @@ export default class pedalboardGui extends HTMLElement {
       }
     });
 
-    let save = document.createElement("button");
-    save.classList.add("saveButton");
-    save.addEventListener("click", () => {
-      this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
-        this.folders[categorie][text.innerHTML] = save;
-      });
-      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
-    });
-    el.append(save);
+    el.append(
+      this.createLiButton(this._saveSVGUrl, "SAVE", () => {
+        this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
+          this.folders[categorie][text.innerHTML] = save;
+        });
+        window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
+      })
+    );
 
-    let edit = document.createElement("button");
-    edit.classList.add("editButton");
-    edit.addEventListener("click", () => {
-      text.removeEventListener("click", clickEventCallBack);
-      input.value = text.innerHTML;
-      input.placeholder = input.value;
-      text.innerHTML = "";
-      text.appendChild(input);
-      input.focus();
-    });
-    el.append(edit);
+    el.append(
+      this.createLiButton(this._editSVGUrl, "EDIT", () => {
+        text.removeEventListener("click", clickEventCallBack);
+        input.value = text.innerHTML;
+        input.placeholder = input.value;
+        text.innerHTML = "";
+        text.appendChild(input);
+        input.focus();
+      })
+    );
 
-    let remove = document.createElement("button");
-    remove.classList.add("removeButton");
-    remove.addEventListener("click", () => this.deleteSave(categorieNameCallBack, () => text.innerHTML, el));
-    el.append(remove);
+    el.append(
+      this.createLiButton(this._deleteSVGUrl, "DELETE", () =>
+        this.deleteSave(categorieNameCallBack, () => text.innerHTML, el)
+      )
+    );
 
     return el;
   }
@@ -389,31 +409,39 @@ export default class pedalboardGui extends HTMLElement {
       }
     });
 
-    let edit = document.createElement("button");
-    edit.classList.add("editButton");
-    edit.addEventListener("click", () => {
-      text.removeEventListener("click", clickEventCallBack);
-      input.value = text.innerHTML;
-      input.placeholder = input.value;
-      text.innerHTML = "";
-      text.appendChild(input);
-      input.focus();
-    });
-    el.append(edit);
+    el.append(
+      this.createLiButton(this._editSVGUrl, "EDIT", () => {
+        text.removeEventListener("click", clickEventCallBack);
+        input.value = text.innerHTML;
+        input.placeholder = input.value;
+        text.innerHTML = "";
+        text.appendChild(input);
+        input.focus();
+      })
+    );
 
-    let remove = document.createElement("button");
-    remove.classList.add("removeButton");
-    remove.addEventListener("click", () => this.deleteCategorie(() => text.innerHTML, el));
-    el.append(remove);
+    el.append(this.createLiButton(this._deleteSVGUrl, "DELETE", () => this.deleteCategorie(() => text.innerHTML, el)));
 
     return el;
+  }
+
+  // Create a button for a categorie or a save
+  createLiButton(url, alt, callback) {
+    let img = document.createElement("img");
+    img.setAttribute("crossorigin", "anonymous");
+    img.setAttribute("src", url);
+    img.setAttribute("alt", alt);
+    img.addEventListener("click", callback);
+    img.classList.add("listElementButton");
+    return img;
   }
 
   // Link the css
   setStyle() {
     const linkElem = document.createElement("link");
     linkElem.setAttribute("rel", "stylesheet");
-    linkElem.setAttribute("href", "../pedalboard/Gui/style.css");
+    linkElem.setAttribute("crossorigin", "anonymous");
+    linkElem.setAttribute("href", `${this._baseURL}/style.css`);
 
     this._root.appendChild(linkElem);
   }

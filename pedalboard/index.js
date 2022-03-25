@@ -19,6 +19,14 @@ export default class PedalBoardPlugin extends WebAudioModule {
 
   id = 0;
 
+  removeRelativeUrl = (relativeURL) => {
+    if (relativeURL[0] == ".") {
+      return `${this._baseURL}${relativeURL.substring(1)}`;
+    } else {
+      return relativeURL;
+    }
+  };
+
   async _loadDescriptor() {
     const url = this._descriptorUrl;
     if (!url) throw new TypeError("Descriptor not found");
@@ -46,9 +54,9 @@ export default class PedalBoardPlugin extends WebAudioModule {
   }
 
   async fetchPedals() {
-    let repos = await fetch(`pedalboard/repositories.json`);
+    let repos = await fetch(`${this._baseURL}/repositories.json`);
     let json2 = await repos.json();
-    let files = await Promise.allSettled(json2.map((el) => fetch(el)));
+    let files = await Promise.allSettled(json2.map((el) => fetch(this.removeRelativeUrl(el))));
     let urls = await Promise.all(files.filter((el) => el.status == "fulfilled").map((el) => el.value.json()));
     urls = urls.reduce((arr, next) => arr.concat(next), []);
 
