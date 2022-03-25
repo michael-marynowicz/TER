@@ -25,7 +25,6 @@ export default class pedalboardGui extends HTMLElement {
 
     this._root = this.attachShadow({ mode: "open" });
 
-    console.log(import.meta.url, this._baseURL.slice(0, this._baseURL.lastIndexOf("/")), this._baseURL);
     this.init();
   }
 
@@ -149,7 +148,25 @@ export default class pedalboardGui extends HTMLElement {
       });
 
       this.board.appendChild(wrapper);
+
+      this.resizeWrapper(wrapper);
     });
+  }
+
+  // Scale the gui of the node to the height of the board;
+  _boardTotalOffsetX = 0;
+  resizeWrapper(wrapper) {
+    wrapper.style.position = "relative";
+    wrapper.style.transformOrigin = "top left";
+
+    const scale = 200 / wrapper.offsetHeight;
+    const oldHeight = wrapper.getBoundingClientRect().height;
+    const oldWidth = wrapper.getBoundingClientRect().width;
+
+    wrapper.style.transform = "scale(" + scale + "," + scale + ")";
+    wrapper.style.top = `${Math.round((oldHeight - wrapper.getBoundingClientRect().height) / 2)}px`;
+    wrapper.style.left = `${-this._boardTotalOffsetX}px`;
+    this._boardTotalOffsetX += oldWidth - wrapper.getBoundingClientRect().width;
   }
 
   // Return the nodeArticle when selecting child node instead of itself with drag and drop.
