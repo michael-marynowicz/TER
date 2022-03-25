@@ -25,7 +25,7 @@ export default class pedalboardGui extends HTMLElement {
 
     this._root = this.attachShadow({ mode: "open" });
 
-    console.log(import.meta.url, _baseURL.slice(0, url.lastIndexOf("/")), this._baseURL);
+    console.log(import.meta.url, this._baseURL.slice(0, url.lastIndexOf("/")), this._baseURL);
     this.init();
   }
 
