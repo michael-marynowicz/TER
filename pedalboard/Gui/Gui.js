@@ -26,6 +26,7 @@ export default class pedalboardGui extends HTMLElement {
     this._root = this.attachShadow({ mode: "open" });
 
     this.init();
+    console.log(_baseURL);
   }
 
   // Initlialise the differents elements of the gui
