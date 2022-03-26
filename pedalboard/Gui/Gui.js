@@ -126,6 +126,7 @@ export default class pedalboardGui extends HTMLElement {
         this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
         this.board.removeChild(wrapper);
         this._plug.pedalboardNode.connectNodes(this.board.childNodes);
+        this.repositionWrappers(this.board.childNodes);
       });
       infos.append(cross);
       wrapper.appendChild(infos);
@@ -142,6 +143,7 @@ export default class pedalboardGui extends HTMLElement {
             this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
             this.board.insertBefore(origin, this.dragEvent.x > event.x ? target : target.nextSibling);
             this._plug.pedalboardNode.connectNodes(this.board.childNodes);
+            this.repositionWrappers(this.board.childNodes);
           }
           this.dragEvent.end = false;
         }
@@ -166,7 +168,19 @@ export default class pedalboardGui extends HTMLElement {
     wrapper.style.transform = "scale(" + scale + "," + scale + ")";
     wrapper.style.top = `${Math.round((oldHeight - wrapper.getBoundingClientRect().height) / 2)}px`;
     wrapper.style.left = `${-this._boardTotalOffsetX}px`;
-    this._boardTotalOffsetX += oldWidth - wrapper.getBoundingClientRect().width;
+
+    const offsetWidth = oldWidth - wrapper.getBoundingClientRect().width;
+    wrapper.setAttribute("left", offsetWidth);
+    this._boardTotalOffsetX += offsetWidth;
+  }
+
+  //Change the left property of the wrapper when the order is changed with drag and drop
+  repositionWrappers(wrappers) {
+    this._boardTotalOffsetX = 0;
+    wrappers.forEach((wrapper) => {
+      wrapper.style.left = `${-this._boardTotalOffsetX}px`;
+      this._boardTotalOffsetX += parseInt(wrapper.getAttribute("left"), 10);
+    });
   }
 
   // Return the nodeArticle when selecting child node instead of itself with drag and drop.
