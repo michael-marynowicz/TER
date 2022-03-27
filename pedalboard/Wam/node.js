@@ -7,6 +7,8 @@ export default class PedalBoardNode extends CompositeAudioNode {
   _wamNode = undefined;
 
   nodes = {};
+  pedalBoardInfos = {};
+  lastParameterValue = {};
 
   /**
    * @param {ParamMgrNode} wamNode
@@ -86,30 +88,63 @@ export default class PedalBoardNode extends CompositeAudioNode {
     );
   }
 
-  async getParameterInfo() {
-    var pedalBoardInfos = {};
-    var pedalNames = {};
-    var id = 0;
+  async getParameterInfo(...parameterIdQuery) {
+    if (parameterIdQuery.length == 0) {
+      this.pedalBoardInfos = {};
+      var pedalNames = {};
 
-    const keys = Object.keys(this.nodes);
-    var childInfos = await Promise.all(keys.map((key) => this.nodes[key].node.getParameterInfo()));
-    childInfos.forEach((child, i) => {
-      const infos = Object.keys(child);
-      const pedalName = this.nodes[keys[i]].name;
-      if (pedalNames[pedalName] != undefined) {
-        pedalNames[pedalName] += 1;
-      } else {
-        pedalNames[pedalName] = 0;
-      }
+      const keys = Object.keys(this.nodes);
+      var childInfos = await Promise.all(keys.map((key) => this.nodes[key].node.getParameterInfo()));
+      childInfos.forEach((child, i) => {
+        const infos = Object.keys(child);
+        const pedalName = this.nodes[keys[i]].name;
+        pedalNames[pedalName] = pedalNames[pedalName] == undefined ? 0 : pedalNames[pedalName] + 1;
 
-      infos.forEach((key) => {
-        let info = child[key];
-        info.id = id;
-        id += 1;
-        info.label = `n°${i} ${pedalName} -> ${info.label}`;
-        pedalBoardInfos[info.label] = info;
+        infos.forEach((key) => {
+          let info = child[key];
+          info.pedalId = keys[i];
+          info.label = `n°${i} ${pedalName} -> ${info.label}`;
+          this.pedalBoardInfos[info.label] = info;
+        });
       });
+      return this.pedalBoardInfos;
+    } else {
+      let infos = {};
+      parameterIdQuery.forEach((id) => {
+        infos[id] = this.pedalBoardInfos[id];
+      });
+      return infos;
+    }
+  }
+
+  async getParameterValues(normalized, parameterIdQuery) {
+    let parameter = this.pedalBoardInfos[parameterIdQuery];
+    if (parameter) {
+      this.lastParameterValue = await this.nodes[parameter.pedalId].node.getParameterValues();
+      return { [parameterIdQuery]: this.lastParameterValue[parameter.id] };
+    }
+  }
+
+  scheduleEvents(...events) {
+    events.forEach((event) => {
+      const { type, data, time } = event;
+      if (type === "wam-automation") {
+        const info = this.pedalBoardInfos[data.id];
+        const { id, normalized } = this.lastParameterValue[info.id];
+        this.automateChange(this.nodes[info.pedalId].node._wamNode.parameters.get(id), normalized, data.value, time);
+      }
     });
-    return pedalBoardInfos;
+    this._wamNode.call("scheduleEvents", ...events);
+  }
+
+  automateChange(audioParam, normalized, value, time) {
+    if (!audioParam) return;
+    if (audioParam.info.type === "float") {
+      if (normalized) audioParam.linearRampToNormalizedValueAtTime(value, time);
+      else audioParam.linearRampToValueAtTime(value, time);
+    } else {
+      if (normalized) audioParam.setNormalizedValueAtTime(value, time);
+      else audioParam.setValueAtTime(value, time);
+    }
   }
 }
