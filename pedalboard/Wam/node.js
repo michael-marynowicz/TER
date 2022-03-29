@@ -128,23 +128,14 @@ export default class PedalBoardNode extends CompositeAudioNode {
   scheduleEvents(...events) {
     events.forEach((event) => {
       const { type, data, time } = event;
-      if (type === "wam-automation") {
-        const info = this.pedalBoardInfos[data.id];
-        const { id, normalized } = this.lastParameterValue[info.id];
-        this.automateChange(this.nodes[info.pedalId].node._wamNode.parameters.get(id), normalized, data.value, time);
-      }
+      const info = this.pedalBoardInfos[data.id];
+      const { id, normalized } = this.lastParameterValue[info.id];
+      this.nodes[info.pedalId].node.scheduleEvents({
+        type,
+        time,
+        data: { id, normalized, value: data.value },
+      });
     });
     this._wamNode.call("scheduleEvents", ...events);
-  }
-
-  automateChange(audioParam, normalized, value, time) {
-    if (!audioParam) return;
-    if (audioParam.info.type === "float") {
-      if (normalized) audioParam.linearRampToNormalizedValueAtTime(value, time);
-      else audioParam.linearRampToValueAtTime(value, time);
-    } else {
-      if (normalized) audioParam.setNormalizedValueAtTime(value, time);
-      else audioParam.setValueAtTime(value, time);
-    }
   }
 }
