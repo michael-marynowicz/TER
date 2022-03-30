@@ -116,8 +116,8 @@ export default class pedalboardGui extends HTMLElement {
         this.dragEvent.end = true;
       };
 
-      let infos = document.createElement("header");
-      infos.innerHTML = instance.name;
+      let header = document.createElement("header");
+      header.innerHTML = instance.name;
 
       let cross = document.createElement("img");
       cross.src = this._crossIMGUrl;
@@ -128,8 +128,7 @@ export default class pedalboardGui extends HTMLElement {
         this._plug.pedalboardNode.connectNodes(this.board.childNodes);
         this.repositionWrappers(this.board.childNodes);
       });
-      infos.append(cross);
-      wrapper.appendChild(infos);
+      header.append(cross);
       wrapper.appendChild(gui);
       wrapper.id = id;
       wrapper.classList.add("nodeArticle");
@@ -150,8 +149,7 @@ export default class pedalboardGui extends HTMLElement {
       });
 
       this.board.appendChild(wrapper);
-
-      this.resizeWrapper(wrapper);
+      this.resizeWrapper(wrapper, gui);
     });
   }
 
@@ -161,15 +159,18 @@ export default class pedalboardGui extends HTMLElement {
     wrapper.style.position = "relative";
     wrapper.style.transformOrigin = "top left";
 
-    const scale = 200 / wrapper.offsetHeight;
     const oldHeight = wrapper.getBoundingClientRect().height;
     const oldWidth = wrapper.getBoundingClientRect().width;
+    const scale = 200 / oldHeight;
 
-    wrapper.style.transform = "scale(" + scale + "," + scale + ")";
-    wrapper.style.top = `${Math.round((oldHeight - wrapper.getBoundingClientRect().height) / 2)}px`;
-    wrapper.style.left = `${-this._boardTotalOffsetX}px`;
+    wrapper.style.transform = "scale(" + scale + ")";
 
     const offsetWidth = oldWidth - wrapper.getBoundingClientRect().width;
+    const offsetHeight = oldHeight - wrapper.getBoundingClientRect().height;
+
+    wrapper.style.top = `${Math.round(offsetHeight / 2)}px`;
+    wrapper.style.left = `${-this._boardTotalOffsetX}px`;
+
     wrapper.setAttribute("left", offsetWidth);
     this._boardTotalOffsetX += offsetWidth;
   }
