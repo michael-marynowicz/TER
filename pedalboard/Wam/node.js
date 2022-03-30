@@ -107,19 +107,29 @@ export default class PedalBoardNode extends CompositeAudioNode {
           this.pedalBoardInfos[info.label] = info;
         });
       });
+      this.pedalBoardInfos["PedalBoard/Mix"] = {
+        id: "PedalBoard/Mix",
+        defaultValue: 1,
+        label: "Mix",
+        maxValue: 1,
+        minValue: 0,
+        type: "float",
+      };
       return this.pedalBoardInfos;
     } else {
-      let infos = {};
-      parameterIdQuery.forEach((id) => {
+      return parameterIdQuery.reduce((infos, id) => {
         infos[id] = this.pedalBoardInfos[id];
-      });
-      return infos;
+        return infos;
+      }, {});
     }
   }
 
   async getParameterValues(normalized, parameterIdQuery) {
     let parameter = this.pedalBoardInfos[parameterIdQuery];
     if (parameter) {
+      if (parameter.id == "PedalBoard/Mix") {
+        return { [parameterIdQuery]: this._output.gain };
+      }
       this.lastParameterValue = await this.nodes[parameter.pedalId].node.getParameterValues();
       return { [parameterIdQuery]: this.lastParameterValue[parameter.id] };
     }
@@ -129,12 +139,16 @@ export default class PedalBoardNode extends CompositeAudioNode {
     events.forEach((event) => {
       const { type, data, time } = event;
       const info = this.pedalBoardInfos[data.id];
-      const { id, normalized } = this.lastParameterValue[info.id];
-      this.nodes[info.pedalId].node.scheduleEvents({
-        type,
-        time,
-        data: { id, normalized, value: data.value },
-      });
+      if (info.id == "PedalBoard/Mix") {
+        this._output.gain.value = data.value;
+      } else {
+        const { id, normalized } = this.lastParameterValue[info.id];
+        this.nodes[info.pedalId].node.scheduleEvents({
+          type,
+          time,
+          data: { id, normalized, value: data.value },
+        });
+      }
     });
     this._wamNode.call("scheduleEvents", ...events);
   }
