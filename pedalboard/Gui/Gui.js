@@ -468,6 +468,12 @@ export default class pedalboardGui extends HTMLElement {
     return img;
   }
 
+  //Return DataWidth and DataHeight values
+  get properties() {
+    const bbox = this.getBoundingClientRect();
+    return { dataWidth: { value: bbox.width }, dataHeight: { value: bbox.height } };
+  }
+
   // Link the css
   setStyle() {
     const linkElem = document.createElement("link");
