@@ -33,6 +33,7 @@ export default class pedalboardGui extends HTMLElement {
     this.setStyle();
 
     this.preview = await this.loadThumbnails();
+
     this._root.appendChild(this.preview);
 
     this.board = document.createElement("div");
