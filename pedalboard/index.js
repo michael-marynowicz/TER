@@ -41,18 +41,26 @@ export default class PedalBoardPlugin extends WebAudioModule {
     return super.initialize(state);
   }
 
+  /**
+   * Initialize the WamNode of the PedalBoard with an initialState if provided.
+   * @param {*} initialState
+   * @returns The PedalBoardNode.
+   * @author Quentin Beauchet
+   */
   async createAudioNode(initialState) {
     this.pedalboardNode = new PedalBoardNode(this.audioContext);
 
-    const internalParamsConfig = {};
-
-    const optionsIn = { internalParamsConfig };
-    const paramMgrNode = await ParamMgrFactory.create(this, optionsIn);
+    const paramMgrNode = await ParamMgrFactory.create(this, {});
     this.pedalboardNode.setup(paramMgrNode);
     if (initialState) this.pedalboardNode.setState(initialState);
     return this.pedalboardNode;
   }
 
+  /**
+   * Fetch the pedals from each of the servers in the repositories.json file and then import their WebAudioModule.
+   * For each of them store the needed information in this.pedals.
+   * @author Quentin Beauchet
+   */
   async fetchPedals() {
     let repos = await fetch(`${this._baseURL}/repositories.json`);
     let json2 = await repos.json();
@@ -81,6 +89,12 @@ export default class PedalBoardPlugin extends WebAudioModule {
     }
   }
 
+  /**
+   * Add a pedal to the board, instanciate the WamNode with an initial state if provided and append the Gui to the board.
+   * @param {string} pedalName
+   * @param {Object} state
+   * @author Quentin Beauchet
+   */
   async addPedal(pedalName, state) {
     const { default: WAM } = this.pedals[pedalName].module;
     let instance = await WAM.createInstance(this.pedalboardNode.module._groupId, this.pedalboardNode.context);

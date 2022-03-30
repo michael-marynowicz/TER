@@ -23,39 +23,61 @@ export default class PedalBoardNode extends CompositeAudioNode {
     this.createNodes();
   }
 
+  /**
+   * Create the input and outpur nodes of the PedalBoard.
+   * @author Quentin Beauchet
+   */
   createNodes() {
     this._input = this.context.createGain();
     this.connect(this._input);
     this._output = this.context.createGain();
   }
 
+  /**
+   * Connect every nodes from the board of the Gui.
+   * @param {HTMLCollection} nodes
+   * @author Quentin Beauchet
+   */
   connectNodes(nodes) {
     this.lastNode = this._input;
-    var connectedIds = [];
     nodes.forEach((el) => {
       let audioNode = this.nodes[el.id].node;
       this.lastNode.connect(audioNode);
       this.lastNode = audioNode;
-      connectedIds.push(el.id);
-    });
-    Object.keys(this.nodes).forEach((el) => {
-      if (!connectedIds.includes(el)) delete this.nodes[el];
     });
 
     this.lastNode.connect(this._output);
     this.updateInfos();
   }
 
+  /**
+   * Disconnects every nodes from the board of the Gui. It then check the nodes stored in this.nodes and
+   * if they aren't needed anymore it delete them from the object.
+   * @param {HTMLCollection} nodes
+   * @author Quentin Beauchet
+   */
   disconnectNodes(nodes) {
     this.lastNode = this._input;
+    var connectedIds = [];
     nodes.forEach((el) => {
       let audioNode = this.nodes[el.id].node;
       this.lastNode.disconnect(audioNode);
       this.lastNode = audioNode;
+      connectedIds.push(el.id);
     });
     this.lastNode.disconnect(this._output);
+
+    Object.keys(this.nodes).forEach((el) => {
+      if (!connectedIds.includes(el)) delete this.nodes[el];
+    });
+    this.connectNodes([]);
   }
 
+  /**
+   * Connect audioNode at the end of the PedalBoard beetween this.lastNode and this._output.
+   * @param {WamNode} audioNode
+   * @author Quentin Beauchet
+   */
   connectPlugin(audioNode) {
     this.lastNode.disconnect(this._output);
     this.lastNode.connect(audioNode);
@@ -64,22 +86,40 @@ export default class PedalBoardNode extends CompositeAudioNode {
     this.lastNode = audioNode;
   }
 
+  /**
+   * Add the audioNode the the audio of the PedalBoard,then it calls updateInfos() to refresh the automation labels.
+   * @param {WamNode} audioNode The audioNode.
+   * @param {string} pedalName The name of the node.
+   * @param {int} id The unique id of the node, it help to map the audioNode to it's Gui.
+   * @author Quentin Beauchet
+   */
   addPlugin(audioNode, pedalName, id) {
     this.connectPlugin(audioNode);
     this.nodes[id] = { name: pedalName, node: audioNode };
     this.updateInfos();
   }
 
+  /**
+   * Returns the state of the PedalBoard, it's an object containing the state of each of it's nodes plus the output node.
+   * @param {HTMLCollection} nodes
+   * @returns The state of the PedalBoard
+   * @author Quentin Beauchet
+   */
   async getState(nodes) {
     let ids = Array.from(nodes).map((el) => el.id);
     let states = await Promise.all(ids.map((id) => this.nodes[id].node.getState()));
 
+    //TODO ajouter la node de gain _output
     return states.map((el, index) => ({
       name: this.nodes[ids[index]].name,
       state: el,
     }));
   }
 
+  /**
+   * Trigger an event to inform the ParamMgrNode of a change in order or an addition/deletion of the nodes in the PedalBoard.
+   * @author Quentin Beauchet
+   */
   updateInfos() {
     this._wamNode.dispatchEvent(
       new CustomEvent("wam-info", {
@@ -88,9 +128,26 @@ export default class PedalBoardNode extends CompositeAudioNode {
     );
   }
 
+  /**
+   * If we don't already store the informations, we get it from each nodes in the PedalBoard and we give each a
+   * unique key with the order of the nodeName and the label. If this.pedalBoardInfos is not empty, for each id passed as parameter we
+   * return the information stored in it.
+   * @param  {string[]} parameterIdQuery A list a node parameters ids.
+   * @returns A object including informations aboput each parameter id passed as parameters.
+   * @author Quentin Beauchet
+   */
   async getParameterInfo(...parameterIdQuery) {
     if (parameterIdQuery.length == 0) {
-      this.pedalBoardInfos = {};
+      this.pedalBoardInfos = {
+        "PedalBoard/Mix": {
+          id: "PedalBoard/Mix",
+          defaultValue: 1,
+          label: "Mix",
+          maxValue: 1,
+          minValue: 0,
+          type: "float",
+        },
+      };
       var pedalNames = {};
 
       const keys = Object.keys(this.nodes);
@@ -107,14 +164,6 @@ export default class PedalBoardNode extends CompositeAudioNode {
           this.pedalBoardInfos[info.label] = info;
         });
       });
-      this.pedalBoardInfos["PedalBoard/Mix"] = {
-        id: "PedalBoard/Mix",
-        defaultValue: 1,
-        label: "Mix",
-        maxValue: 1,
-        minValue: 0,
-        type: "float",
-      };
       return this.pedalBoardInfos;
     } else {
       return parameterIdQuery.reduce((infos, id) => {
@@ -124,6 +173,15 @@ export default class PedalBoardNode extends CompositeAudioNode {
     }
   }
 
+  /**
+   * Returns the parameter values from a node in the PedalBoard, we also store the response in this.lastParameterValue
+   * if we need it inside scheduleEvents().
+   *
+   * @param {boolean} normalized This parameter is heredited from CompositeAudioNode but it is not used.
+   * @param {string} parameterIdQuery The id of the node in the PedalBoard, it was set in getParameterInfo().
+   * @returns The parameter values of the node.
+   * @author Quentin Beauchet
+   */
   async getParameterValues(normalized, parameterIdQuery) {
     let parameter = this.pedalBoardInfos[parameterIdQuery];
     if (parameter) {
@@ -135,6 +193,15 @@ export default class PedalBoardNode extends CompositeAudioNode {
     }
   }
 
+  /**
+   * When an event is sent to the PedalBoard, then we get the info from the event data
+   * and if the id is PedalBoard/Mix we change the _output node of the PedalBoard.
+   * Otherwise we get the informations from the last node where the getParameterValues()
+   * was called and we propagate the event to it.
+   *
+   * @param  {WamEvent[]} events List of events to propagate to the nodes in the PedalBoard.
+   * @author Quentin Beauchet
+   */
   scheduleEvents(...events) {
     events.forEach((event) => {
       const { type, data, time } = event;

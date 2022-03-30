@@ -289,6 +289,7 @@ export default class pedalboardGui extends HTMLElement {
     const categorie = categorieNameCallBack();
     this.infos.innerHTML = "";
     this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
+    this._boardTotalOffsetX = 0;
     this.board.innerHTML = "";
     this._plug.loadSave(this.folders[categorie][save]);
 
