@@ -129,6 +129,7 @@ export default class pedalboardGui extends HTMLElement {
         this.repositionWrappers(this.board.childNodes);
       });
       header.append(cross);
+      wrapper.appendChild(header);
       wrapper.appendChild(gui);
       wrapper.id = id;
       wrapper.classList.add("nodeArticle");
