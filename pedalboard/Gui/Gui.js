@@ -118,7 +118,9 @@ export default class pedalboardGui extends HTMLElement {
       };
 
       let header = document.createElement("header");
-      header.innerHTML = instance.name;
+      let title = document.createElement("h2");
+      title.innerHTML = "---"; //instance.name;
+      header.appendChild(title);
 
       let cross = document.createElement("img");
       cross.src = this._crossIMGUrl;
@@ -130,7 +132,7 @@ export default class pedalboardGui extends HTMLElement {
         this.repositionWrappers(this.board.childNodes);
       });
       header.append(cross);
-      wrapper.appendChild(header);
+      //wrapper.appendChild(header);
       wrapper.appendChild(gui);
       wrapper.id = id;
       wrapper.classList.add("nodeArticle");
@@ -151,27 +153,59 @@ export default class pedalboardGui extends HTMLElement {
       });
 
       this.board.appendChild(wrapper);
-      this.resizeWrapper(wrapper, gui);
+      this.resizeWrapper(wrapper, header, gui);
+      title.innerHTML = instance.name;
     });
   }
 
   // Scale the gui of the node to the height of the board;
   _boardTotalOffsetX = 0;
-  resizeWrapper(wrapper) {
+  resizeWrapper(wrapper, header, gui) {
+    const styles = {
+      header: {
+        height: 30,
+        borderWidth: 3,
+      },
+      cross: {
+        width: 15,
+        height: 15,
+      },
+    };
+
     wrapper.style.position = "relative";
     wrapper.style.transformOrigin = "top left";
 
-    const oldHeight = wrapper.getBoundingClientRect().height;
-    const oldWidth = wrapper.getBoundingClientRect().width;
+    const oldHeight = gui.getBoundingClientRect().height;
+    const oldWidth = gui.getBoundingClientRect().width;
     const scale = 200 / oldHeight;
 
     wrapper.style.transform = "scale(" + scale + ")";
 
-    const offsetWidth = oldWidth - wrapper.getBoundingClientRect().width;
-    const offsetHeight = oldHeight - wrapper.getBoundingClientRect().height;
+    const offsetWidth = oldWidth - gui.getBoundingClientRect().width;
+    const offsetHeight = oldHeight - gui.getBoundingClientRect().height;
 
-    wrapper.style.top = `${Math.round(offsetHeight / 2)}px`;
-    wrapper.style.left = `${-this._boardTotalOffsetX}px`;
+    const width = Math.round(wrapper.getBoundingClientRect().width / scale);
+    const height = Math.round(wrapper.getBoundingClientRect().height / scale);
+
+    wrapper.style.top = Math.round(offsetHeight / 2);
+    wrapper.style.left = -this._boardTotalOffsetX;
+
+    wrapper.style.width = width;
+    wrapper.style.height = height;
+
+    gui.style.width = width;
+    gui.style.height = height;
+
+    header.style.height = Math.round(styles.header.height / scale);
+    header.style.borderWidth = Math.round(styles.header.borderWidth / scale);
+
+    header.firstChild.style.fontSize = `${100 / scale}%`;
+    header.lastChild.style.width = Math.round(styles.cross.width / scale);
+    header.lastChild.style.height = Math.round(styles.cross.height / scale);
+
+    wrapper.insertBefore(header, gui);
+
+    console.log(header.firstChild.style);
 
     wrapper.setAttribute("left", offsetWidth);
     this._boardTotalOffsetX += offsetWidth;

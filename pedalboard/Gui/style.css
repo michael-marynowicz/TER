@@ -1,8 +1,8 @@
-:root  {
-  --main-color: #FFFFFF;
-  --text-color : white ;
-  --bg-color : white;
-  --secondary-bg: rgb(118, 118, 118) ;
+:root {
+  --main-color: #ffffff;
+  --text-color: white;
+  --bg-color: white;
+  --secondary-bg: rgb(118, 118, 118);
 }
 
 img {
@@ -15,21 +15,21 @@ img {
   background-color: white;
   border-top-left-radius: 0.25rem;
   border-top-right-radius: 0.25rem;
-  color:  black;
+  color: black;
 }
 
 #board {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  height: 200px;
-  padding: 1rem;
+  height: 250px;
+  padding: 0 1rem 1rem 1rem;
   overflow-x: auto;
   overflow-y: hidden;
   border: 1px solid #dee2e6;
   border-top: 0px;
   background: white;
-  background-image: linear-gradient( #dee2e6 0.01rem, transparent 0.1em),
+  background-image: linear-gradient(#dee2e6 0.01rem, transparent 0.1em),
     linear-gradient(90deg, #dee2e6 0.01rem, transparent 0.1em);
   background-size: 3em 3em;
 }
@@ -83,8 +83,6 @@ li {
 }
 
 .nodeArticle {
-  border-radius: 1rem 1rem 2rem 2rem;
-  background-color: black;
   color: white;
 }
 
@@ -92,14 +90,22 @@ li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0 1rem 0 1rem;
+  background-color: black;
+  border-style: solid;
+  border-color: lightgray;
+}
+
+.nodeArticle > header > h2 {
+  margin: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 0.5rem;
 }
 
 .nodeArticle > header > img {
-  width: 15px;
-  height: 15px;
   filter: contrast(300%);
+  margin-right: 0.5rem;
 }
 
 .addBtn {
