@@ -119,7 +119,7 @@ export default class pedalboardGui extends HTMLElement {
 
       let header = document.createElement("header");
       let title = document.createElement("h2");
-      title.innerHTML = "---"; //instance.name;
+      title.innerHTML = instance.name;
       header.appendChild(title);
 
       let cross = document.createElement("img");
@@ -129,10 +129,8 @@ export default class pedalboardGui extends HTMLElement {
         this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
         this.board.removeChild(wrapper);
         this._plug.pedalboardNode.connectNodes(this.board.childNodes);
-        this.repositionWrappers(this.board.childNodes);
       });
       header.append(cross);
-      //wrapper.appendChild(header);
       wrapper.appendChild(gui);
       wrapper.id = id;
       wrapper.classList.add("nodeArticle");
@@ -146,83 +144,46 @@ export default class pedalboardGui extends HTMLElement {
             this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
             this.board.insertBefore(origin, this.dragEvent.x > event.x ? target : target.nextSibling);
             this._plug.pedalboardNode.connectNodes(this.board.childNodes);
-            this.repositionWrappers(this.board.childNodes);
           }
           this.dragEvent.end = false;
         }
       });
 
       this.board.appendChild(wrapper);
-      this.resizeWrapper(wrapper, header, gui);
-      title.innerHTML = instance.name;
+      this.resizeWrapper(wrapper, header, title, cross, gui);
+      wrapper.insertBefore(header, gui);
     });
   }
 
   // Scale the gui of the node to the height of the board;
-  _boardTotalOffsetX = 0;
-  resizeWrapper(wrapper, header, gui) {
-    const styles = {
-      header: {
-        height: 30,
-        borderWidth: 3,
-      },
-      cross: {
-        width: 15,
-        height: 15,
-      },
-    };
+  resizeWrapper(wrapper, header, title, cross, gui) {
+    const scale = 200 / gui.getBoundingClientRect().height;
 
-    wrapper.style.position = "relative";
     wrapper.style.transformOrigin = "top left";
-
-    const oldHeight = gui.getBoundingClientRect().height;
-    const oldWidth = gui.getBoundingClientRect().width;
-    const scale = 200 / oldHeight;
-
     wrapper.style.transform = "scale(" + scale + ")";
-
-    const offsetWidth = oldWidth - gui.getBoundingClientRect().width;
-    const offsetHeight = oldHeight - gui.getBoundingClientRect().height;
 
     const width = Math.round(wrapper.getBoundingClientRect().width / scale);
     const height = Math.round(wrapper.getBoundingClientRect().height / scale);
 
-    wrapper.style.top = Math.round(offsetHeight / 2);
-    wrapper.style.left = -this._boardTotalOffsetX;
-
-    wrapper.style.width = width;
-    wrapper.style.height = height;
+    wrapper.style.width = wrapper.getBoundingClientRect().width;
+    wrapper.style.height = wrapper.getBoundingClientRect().height;
 
     gui.style.width = width;
     gui.style.height = height;
 
-    header.style.height = Math.round(styles.header.height / scale);
-    header.style.borderWidth = Math.round(styles.header.borderWidth / scale);
+    header.style.height = Math.round(30 / scale);
+    header.style.width = width;
+    header.style.borderWidth = Math.round(3 / scale);
 
-    header.firstChild.style.fontSize = `${100 / scale}%`;
-    header.lastChild.style.width = Math.round(styles.cross.width / scale);
-    header.lastChild.style.height = Math.round(styles.cross.height / scale);
-
-    wrapper.insertBefore(header, gui);
-
-    console.log(header.firstChild.style);
-
-    wrapper.setAttribute("left", offsetWidth);
-    this._boardTotalOffsetX += offsetWidth;
-  }
-
-  //Change the left property of the wrapper when the order is changed with drag and drop
-  repositionWrappers(wrappers) {
-    this._boardTotalOffsetX = 0;
-    wrappers.forEach((wrapper) => {
-      wrapper.style.left = `${-this._boardTotalOffsetX}px`;
-      this._boardTotalOffsetX += parseInt(wrapper.getAttribute("left"), 10);
-    });
+    title.style.fontSize = `${100 / scale}%`;
+    cross.style.width = Math.round(15 / scale);
+    cross.style.height = Math.round(15 / scale);
   }
 
   // Return the nodeArticle when selecting child node instead of itself with drag and drop.
   getWrapper(element) {
     switch (element.tagName) {
+      case "H2":
       case "IMG":
         return element.parentNode.parentNode;
       case "ARTICLE":
@@ -323,7 +284,6 @@ export default class pedalboardGui extends HTMLElement {
     const categorie = categorieNameCallBack();
     this.infos.innerHTML = "";
     this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
-    this._boardTotalOffsetX = 0;
     this.board.innerHTML = "";
     this._plug.loadSave(this.folders[categorie][save]);
 
