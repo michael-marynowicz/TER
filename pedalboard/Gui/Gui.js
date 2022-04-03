@@ -165,19 +165,19 @@ export default class pedalboardGui extends HTMLElement {
     const width = Math.round(wrapper.getBoundingClientRect().width / scale);
     const height = Math.round(wrapper.getBoundingClientRect().height / scale);
 
-    wrapper.style.width = wrapper.getBoundingClientRect().width;
-    wrapper.style.height = wrapper.getBoundingClientRect().height;
+    wrapper.style.width = `${wrapper.getBoundingClientRect().width}px`;
+    wrapper.style.height = `${wrapper.getBoundingClientRect().height}px`;
 
-    gui.style.width = width;
-    gui.style.height = height;
+    gui.style.width = `${width}px`;
+    gui.style.height = `${height}px`;
 
-    header.style.height = Math.round(30 / scale);
-    header.style.width = width;
-    header.style.borderWidth = Math.round(3 / scale);
+    header.style.height = `${Math.round(30 / scale)}px`;
+    header.style.width = `${width}px`;
+    header.style.borderWidth = `${Math.round(3 / scale)}px`;
 
     title.style.fontSize = `${100 / scale}%`;
-    cross.style.width = Math.round(15 / scale);
-    cross.style.height = Math.round(15 / scale);
+    cross.style.width = `${Math.round(15 / scale)}px`;
+    cross.style.height = `${Math.round(15 / scale)}px`;
   }
 
   // Return the nodeArticle when selecting child node instead of itself with drag and drop.

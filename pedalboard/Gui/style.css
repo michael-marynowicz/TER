@@ -16,6 +16,7 @@ img {
   border-top-left-radius: 0.25rem;
   border-top-right-radius: 0.25rem;
   color: black;
+  overflow-x: auto;
 }
 
 #board {
@@ -36,6 +37,7 @@ img {
 
 #board > * {
   cursor: move;
+  flex-shrink: 0;
 }
 
 #savesInfos {
