@@ -1,1 +1,1 @@
-["./pedals.json", "http://localhost:3000/plugins"]
+["./pedals.json", "https://wam-bank.herokuapp.com/plugins"]
