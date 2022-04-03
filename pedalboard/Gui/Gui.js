@@ -31,17 +31,18 @@ export default class pedalboardGui extends HTMLElement {
   // Initlialise the differents elements of the gui
   async init() {
     this.setStyle();
-
+    let myContainer = document.createElement("div");
+    myContainer.classList.add("myContainer");
     this.preview = await this.loadThumbnails();
-
-    this._root.appendChild(this.preview);
+    myContainer.appendChild(this.preview);
 
     this.board = document.createElement("div");
     this.board.id = "board";
     this.dragEvent = { end: false };
-    this._root.appendChild(this.board);
+    myContainer.appendChild(this.board);
 
     this.saveMenu = await this.loadSaves();
+    this._root.appendChild(myContainer);
     this._root.appendChild(this.saveMenu);
   }
 
@@ -106,6 +107,7 @@ export default class pedalboardGui extends HTMLElement {
 
   // Add the plugin to the board.
   addPlugin(instance, img, id) {
+    console.log(instance)
     instance.createGui().then((gui) => {
       let wrapper = document.createElement("article");
       wrapper.draggable = true;
@@ -165,19 +167,19 @@ export default class pedalboardGui extends HTMLElement {
     const width = Math.round(wrapper.getBoundingClientRect().width / scale);
     const height = Math.round(wrapper.getBoundingClientRect().height / scale);
 
-    wrapper.style.width = wrapper.getBoundingClientRect().width;
-    wrapper.style.height = wrapper.getBoundingClientRect().height;
+    wrapper.style.width = `${wrapper.getBoundingClientRect().width}px`;
+    wrapper.style.height = `${wrapper.getBoundingClientRect().height}px`;
 
-    gui.style.width = width;
-    gui.style.height = height;
+    gui.style.width = `${width}px`;
+    gui.style.height = `${height}px`;
 
-    header.style.height = Math.round(30 / scale);
-    header.style.width = width;
-    header.style.borderWidth = Math.round(3 / scale);
+    header.style.height = `${Math.round(30 / scale)}px`;
+    header.style.width = `${width}px`;
+    header.style.borderWidth = `${Math.round(3 / scale)}px`;
 
     title.style.fontSize = `${100 / scale}%`;
-    cross.style.width = Math.round(15 / scale);
-    cross.style.height = Math.round(15 / scale);
+    cross.style.width = `${Math.round(15 / scale)}px`;
+    cross.style.height = `${Math.round(15 / scale)}px`;
   }
 
   // Return the nodeArticle when selecting child node instead of itself with drag and drop.
@@ -200,7 +202,11 @@ export default class pedalboardGui extends HTMLElement {
       let json = await file.json();
       window.localStorage["pedalBoardSaves"] = JSON.stringify(json);
     }
-    this.folders = JSON.parse(window.localStorage["pedalBoardSaves"]);
+    try{
+      this.folders = JSON.parse(window.localStorage["pedalBoardSaves"]);
+    }catch {
+      this.folders = {};
+    }
 
     let keys = Object.keys(this.folders);
 
