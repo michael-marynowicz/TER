@@ -120,7 +120,9 @@ export default class pedalboardGui extends HTMLElement {
       };
 
       let header = document.createElement("header");
-      header.innerHTML = instance.name;
+      let title = document.createElement("h2");
+      title.innerHTML = instance.name;
+      header.appendChild(title);
 
       let cross = document.createElement("img");
       cross.src = this._crossIMGUrl;
@@ -129,10 +131,8 @@ export default class pedalboardGui extends HTMLElement {
         this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
         this.board.removeChild(wrapper);
         this._plug.pedalboardNode.connectNodes(this.board.childNodes);
-        this.repositionWrappers(this.board.childNodes);
       });
       header.append(cross);
-      wrapper.appendChild(header);
       wrapper.appendChild(gui);
       wrapper.id = id;
       wrapper.classList.add("nodeArticle");
@@ -146,51 +146,46 @@ export default class pedalboardGui extends HTMLElement {
             this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
             this.board.insertBefore(origin, this.dragEvent.x > event.x ? target : target.nextSibling);
             this._plug.pedalboardNode.connectNodes(this.board.childNodes);
-            this.repositionWrappers(this.board.childNodes);
           }
           this.dragEvent.end = false;
         }
       });
 
       this.board.appendChild(wrapper);
-      this.resizeWrapper(wrapper, gui);
+      this.resizeWrapper(wrapper, header, title, cross, gui);
+      wrapper.insertBefore(header, gui);
     });
   }
 
   // Scale the gui of the node to the height of the board;
-  _boardTotalOffsetX = 0;
-  resizeWrapper(wrapper) {
-    wrapper.style.position = "relative";
+  resizeWrapper(wrapper, header, title, cross, gui) {
+    const scale = 200 / gui.getBoundingClientRect().height;
+
     wrapper.style.transformOrigin = "top left";
-
-    const oldHeight = wrapper.getBoundingClientRect().height;
-    const oldWidth = wrapper.getBoundingClientRect().width;
-    const scale = 200 / oldHeight;
-
     wrapper.style.transform = "scale(" + scale + ")";
 
-    const offsetWidth = oldWidth - wrapper.getBoundingClientRect().width;
-    const offsetHeight = oldHeight - wrapper.getBoundingClientRect().height;
+    const width = Math.round(wrapper.getBoundingClientRect().width / scale);
+    const height = Math.round(wrapper.getBoundingClientRect().height / scale);
 
-    wrapper.style.top = `${Math.round(offsetHeight / 2)}px`;
-    wrapper.style.left = `${-this._boardTotalOffsetX}px`;
+    wrapper.style.width = wrapper.getBoundingClientRect().width;
+    wrapper.style.height = wrapper.getBoundingClientRect().height;
 
-    wrapper.setAttribute("left", offsetWidth);
-    this._boardTotalOffsetX += offsetWidth;
-  }
+    gui.style.width = width;
+    gui.style.height = height;
 
-  //Change the left property of the wrapper when the order is changed with drag and drop
-  repositionWrappers(wrappers) {
-    this._boardTotalOffsetX = 0;
-    wrappers.forEach((wrapper) => {
-      wrapper.style.left = `${-this._boardTotalOffsetX}px`;
-      this._boardTotalOffsetX += parseInt(wrapper.getAttribute("left"), 10);
-    });
+    header.style.height = Math.round(30 / scale);
+    header.style.width = width;
+    header.style.borderWidth = Math.round(3 / scale);
+
+    title.style.fontSize = `${100 / scale}%`;
+    cross.style.width = Math.round(15 / scale);
+    cross.style.height = Math.round(15 / scale);
   }
 
   // Return the nodeArticle when selecting child node instead of itself with drag and drop.
   getWrapper(element) {
     switch (element.tagName) {
+      case "H2":
       case "IMG":
         return element.parentNode.parentNode;
       case "ARTICLE":
@@ -295,7 +290,6 @@ export default class pedalboardGui extends HTMLElement {
     const categorie = categorieNameCallBack();
     this.infos.innerHTML = "";
     this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
-    this._boardTotalOffsetX = 0;
     this.board.innerHTML = "";
     this._plug.loadSave(this.folders[categorie][save]);
 
