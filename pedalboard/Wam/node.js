@@ -101,21 +101,31 @@ export default class PedalBoardNode extends CompositeAudioNode {
 
   /**
    * Returns the state of the PedalBoard, it's an object containing the state of each of it's nodes plus the output node.
-   * @param {HTMLCollection} nodes
    * @returns The state of the PedalBoard
-   * @author Quentin Beauchet
+   * @author Quentin Beauchet, Yann Forner
    */
-  async getState(nodes) {
-    let ids = Array.from(nodes).map((el) => el.id);
-    let states = await Promise.all(ids.map((id) => this.nodes[id].node.getState()));
-
-    //TODO ajouter la node de gain _output
-    return states.map((el, index) => ({
-      name: this.nodes[ids[index]].name,
-      state: el,
-    }));
+  async getState() {
+    let outputStateCurrent = []; 
+    for (const key in this.nodes) {
+      let module = this.nodes[key];
+      outputStateCurrent.push({name: module.name, state: await module.node.getState()}) ;
+    }
+    let save = JSON.parse(window.localStorage["pedalBoardSaves"]);
+    let outputState = {current : outputStateCurrent, save : save, output :this._output.gain.value}    
+    return outputState ;
   }
 
+  /**
+   * This function clear the board, disconnect all the modules, add the new modules from the param and set their states
+   * @param {dict}  state the saved Dict
+   * @author  Yann Forner
+   */
+   async setState(state) {
+    window.localStorage["pedalBoardSaves"] = JSON.stringify(state.save);
+    this.disconnectNodes(this._wamNode.module.gui.board.childNodes);
+    this._wamNode.module.gui.board.innerHTML = "";
+    this._wamNode.module.loadSave(state.current);
+   }
   /**
    * Trigger an event to inform the ParamMgrNode of a change in order or an addition/deletion of the nodes in the PedalBoard.
    * @author Quentin Beauchet
