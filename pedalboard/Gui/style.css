@@ -30,7 +30,7 @@ img {
   border-top: 0px;
   background: white;
   background-image: linear-gradient( #dee2e6 0.01rem, transparent 0.1em),
-    linear-gradient(90deg, #dee2e6 0.01rem, transparent 0.1em);
+  linear-gradient(90deg, #dee2e6 0.01rem, transparent 0.1em);
   background-size: 3em 3em;
 }
 
