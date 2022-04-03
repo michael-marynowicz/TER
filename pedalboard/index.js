@@ -62,23 +62,26 @@ export default class PedalBoardPlugin extends WebAudioModule {
    * @author Quentin Beauchet
    */
   async fetchPedals() {
+    const filterFetch = (el) => el.status == "fulfilled" && el.value.status == 200;
+    const filterImport = (el) => el.status == "fulfilled";
+
     let repos = await fetch(`${this._baseURL}/repositories.json`);
     let json2 = await repos.json();
     let files = await Promise.allSettled(json2.map((el) => fetch(this.removeRelativeUrl(el))));
-    let urls = await Promise.all(files.filter((el) => el.status == "fulfilled").map((el) => el.value.json()));
+    let urls = await Promise.all(files.filter(filterFetch).map((el) => el.value.json()));
     urls = urls.reduce((arr, next) => arr.concat(next), []);
 
-    let responses = await Promise.all(urls.map((el) => fetch(`${el}descriptor.json`)));
+    let responses = await Promise.allSettled(urls.map((el) => fetch(`${el}descriptor.json`)));
 
-    let descriptors = await Promise.all(responses.map((el) => el.json()));
-    let modules = await Promise.all(urls.map((el) => import(`${el}index.js`)));
+    let descriptors = await Promise.all(responses.filter(filterFetch).map((el) => el.value.json()));
+    let modules = (await Promise.allSettled(urls.map((el) => import(`${el}index.js`)))).filter(filterImport);
 
     this.pedals = {};
     descriptors.forEach((el, index) => {
       this.pedals[el.name] = {
         url: urls[index],
         descriptor: el,
-        module: modules[index],
+        module: modules[index].value,
       };
     });
   }
