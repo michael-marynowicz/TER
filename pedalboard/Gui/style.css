@@ -18,6 +18,11 @@ img {
   color: black;
 }
 
+#preview > div {
+  display: flex;
+  overflow-x: scroll;
+}
+
 #board {
   display: flex;
   align-items: flex-start;
