@@ -63,7 +63,6 @@ export default class PedalBoardPlugin extends WebAudioModule {
    */
   async fetchPedals() {
     const filterFetch = (el) => el.status == "fulfilled" && el.value.status == 200;
-    const filterImport = (el) => el.status == "fulfilled";
 
     let repos = await fetch(`${this._baseURL}/repositories.json`);
     let json2 = await repos.json();
@@ -74,15 +73,17 @@ export default class PedalBoardPlugin extends WebAudioModule {
     let responses = await Promise.allSettled(urls.map((el) => fetch(`${el}descriptor.json`)));
 
     let descriptors = await Promise.all(responses.filter(filterFetch).map((el) => el.value.json()));
-    let modules = (await Promise.allSettled(urls.map((el) => import(`${el}index.js`)))).filter(filterImport);
+    let modules = await Promise.allSettled(urls.map((el) => import(`${el}index.js`)));
 
     this.pedals = {};
     descriptors.forEach((el, index) => {
-      this.pedals[el.name] = {
-        url: urls[index],
-        descriptor: el,
-        module: modules[index].value,
-      };
+      if (modules[index].status == "fulfilled") {
+        this.pedals[el.name] = {
+          url: urls[index],
+          descriptor: el,
+          module: modules[index].value,
+        };
+      }
     });
   }
 
