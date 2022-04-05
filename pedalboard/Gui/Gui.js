@@ -107,7 +107,7 @@ export default class pedalboardGui extends HTMLElement {
 
   // Add the plugin to the board.
   addPlugin(instance, img, id) {
-    console.log(instance)
+    console.log(instance);
     instance.createGui().then((gui) => {
       let wrapper = document.createElement("article");
       wrapper.draggable = true;
@@ -202,9 +202,9 @@ export default class pedalboardGui extends HTMLElement {
       let json = await file.json();
       window.localStorage["pedalBoardSaves"] = JSON.stringify(json);
     }
-    try{
+    try {
       this.folders = JSON.parse(window.localStorage["pedalBoardSaves"]);
-    }catch {
+    } catch {
       this.folders = {};
     }
 
