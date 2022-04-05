@@ -138,6 +138,11 @@ export default class pedalboardGui extends HTMLElement {
           this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
         }
       };
+      wrapper.ondragend = () => {
+        if (this.dropZone.parentElement == this.board) {
+          this.board.removeChild(this.dropZone);
+        }
+      };
 
       let header = document.createElement("header");
       let title = document.createElement("h2");
