@@ -31,19 +31,17 @@ export default class pedalboardGui extends HTMLElement {
   // Initlialise the differents elements of the gui
   async init() {
     this.setStyle();
-    let myContainer = document.createElement("div");
-    myContainer.classList.add("myContainer");
+    this.body = document.createElement("body");
+
     this.preview = await this.loadThumbnails();
-    myContainer.appendChild(this.preview);
-
-    this.board = document.createElement("div");
-    this.board.id = "board";
-    this.dragEvent = { end: false };
-    myContainer.appendChild(this.board);
-
+    this.createBoard();
     this.saveMenu = await this.loadSaves();
-    this._root.appendChild(myContainer);
-    this._root.appendChild(this.saveMenu);
+
+    this.body.appendChild(this.preview);
+    this.body.appendChild(this.board);
+    this.body.appendChild(this.saveMenu);
+
+    this._root.appendChild(this.body);
   }
 
   // Load the thumbnails of the plugins
@@ -105,18 +103,40 @@ export default class pedalboardGui extends HTMLElement {
     return preview;
   }
 
+  createBoard() {
+    this.board = document.createElement("div");
+    this.board.id = "board";
+
+    this.dropZone = document.createElement("div");
+    this.dropZone.id = "dropZone";
+    this.dropZone.ondragover = (e) => e.preventDefault();
+    this.dropZone.ondrop = () => {
+      let target = this.dropZone.nextSibling;
+      this.board.removeChild(this.dropZone);
+
+      this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
+      this.board.insertBefore(this.dragOrigin, target);
+      this._plug.pedalboardNode.connectNodes(this.board.childNodes);
+    };
+
+    return this.board;
+  }
+
   // Add the plugin to the board.
   addPlugin(instance, img, id) {
-    console.log(instance);
     instance.createGui().then((gui) => {
       let wrapper = document.createElement("article");
       wrapper.draggable = true;
       wrapper.ondragstart = (event) => {
         event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
-        this.dragEvent = { x: event.x, origin: wrapper, end: false };
+        this.dragOrigin = wrapper;
       };
-      wrapper.ondragend = () => {
-        this.dragEvent.end = true;
+      wrapper.ondragover = (event) => {
+        let target = this.getWrapper(event.path);
+        let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
+        if (target) {
+          this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
+        }
       };
 
       let header = document.createElement("header");
@@ -136,20 +156,6 @@ export default class pedalboardGui extends HTMLElement {
       wrapper.appendChild(gui);
       wrapper.id = id;
       wrapper.classList.add("nodeArticle");
-
-      this.board.addEventListener("mouseover", (event) => {
-        if (this.dragEvent.end) {
-          let origin = this.dragEvent.origin;
-          let target = this.getWrapper(this._root.elementFromPoint(event.x, event.y));
-
-          if (target.parentNode == this.board && origin != target) {
-            this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
-            this.board.insertBefore(origin, this.dragEvent.x > event.x ? target : target.nextSibling);
-            this._plug.pedalboardNode.connectNodes(this.board.childNodes);
-          }
-          this.dragEvent.end = false;
-        }
-      });
 
       this.board.appendChild(wrapper);
       this.resizeWrapper(wrapper, header, title, cross, gui);
@@ -183,16 +189,15 @@ export default class pedalboardGui extends HTMLElement {
   }
 
   // Return the nodeArticle when selecting child node instead of itself with drag and drop.
-  getWrapper(element) {
-    switch (element.tagName) {
-      case "H2":
-      case "IMG":
-        return element.parentNode.parentNode;
-      case "ARTICLE":
-        return element;
-      default:
-        return element.parentNode;
+  getWrapper(path) {
+    let pre;
+    for (let e of path) {
+      if (e.id == "board") {
+        return pre;
+      }
+      pre = e;
     }
+    return pre;
   }
 
   // Create the save panel.

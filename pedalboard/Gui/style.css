@@ -5,6 +5,10 @@
   --secondary-bg: rgb(118, 118, 118);
 }
 
+body {
+  width: 1000px;
+}
+
 img {
   max-height: 10rem;
 }
@@ -35,8 +39,8 @@ img {
   border: 1px solid #dee2e6;
   border-top: 0px;
   background: white;
-  background-image: linear-gradient( #dee2e6 0.01rem, transparent 0.1em),
-  linear-gradient(90deg, #dee2e6 0.01rem, transparent 0.1em);
+  background-image: linear-gradient(#dee2e6 0.01rem, transparent 0.1em),
+    linear-gradient(90deg, #dee2e6 0.01rem, transparent 0.1em);
   background-size: 3em 3em;
 }
 
@@ -187,4 +191,12 @@ select {
 
 .flex-item {
   text-align: center;
+}
+
+#dropZone {
+  display: inline-block;
+  align-self: center;
+  border: 5px dashed black;
+  width: 100px;
+  height: 200px;
 }
