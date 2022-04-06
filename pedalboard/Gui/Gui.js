@@ -207,16 +207,9 @@ export default class pedalboardGui extends HTMLElement {
 
   // Create the save panel.
   async loadSaves() {
-    if (window.localStorage["pedalBoardSaves"] == undefined) {
-      let file = await fetch(this._savesUrl);
-      let json = await file.json();
-      window.localStorage["pedalBoardSaves"] = JSON.stringify(json);
-    }
-    try {
-      this.folders = JSON.parse(window.localStorage["pedalBoardSaves"]);
-    } catch {
-      this.folders = {};
-    }
+    let file = await fetch(this._savesUrl);
+    this.folders = await file.json();
+    
 
     let keys = Object.keys(this.folders);
 
@@ -260,7 +253,6 @@ export default class pedalboardGui extends HTMLElement {
       let saveInput = this.createCategorieElement(categorie);
       this.categories.appendChild(saveInput);
       this.folders[categorie] = [];
-      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
       saveInput.lastChild.previousSibling.click();
     });
     categories.appendChild(button);
@@ -285,7 +277,6 @@ export default class pedalboardGui extends HTMLElement {
       let saveInput = this.createSaveElement(categorieNameCallBack, save);
       this.saves.appendChild(saveInput);
       this.folders[categorie][save] = [];
-      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
       saveInput.lastChild.previousSibling.click();
     });
     this.saves.appendChild(button);
@@ -352,14 +343,12 @@ export default class pedalboardGui extends HTMLElement {
       this.folders[newName] = this.folders[oldName];
       delete this.folders[oldName];
     }
-    window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
     return true;
   }
 
   // Delete a save.
   deleteSave(categorieNameCallBack, saveNameCallBack, node) {
     delete this.folders[categorieNameCallBack()][saveNameCallBack()];
-    window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
     this.saves.removeChild(node);
   }
 
@@ -370,7 +359,6 @@ export default class pedalboardGui extends HTMLElement {
       alert("Empty the categorie before trying to delete it");
     } else {
       delete this.folders[categorie];
-      window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
       this.categories.removeChild(node);
     }
   }
@@ -406,7 +394,6 @@ export default class pedalboardGui extends HTMLElement {
         this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
           this.folders[categorie][text.innerHTML] = save;
         });
-        window.localStorage["pedalBoardSaves"] = JSON.stringify(this.folders);
       })
     );
 

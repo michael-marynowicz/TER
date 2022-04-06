@@ -106,7 +106,6 @@ export default class PedalBoardNode extends CompositeAudioNode {
    */
   async getState() {
     let outputStateCurrent = []; 
-    console.log(this._wamNode.module.gui.board.childNodes)
     for (const key in this.nodes) {
       let module = this.nodes[key];
       for (let i = 0; i < this._wamNode.module.gui.board.childNodes.length; i++) {
@@ -117,9 +116,8 @@ export default class PedalBoardNode extends CompositeAudioNode {
         }
       }
     }
-    let save = JSON.parse(window.localStorage["pedalBoardSaves"]);
-    let outputState = {current : outputStateCurrent, save : save, output :this._output.gain.value}    
-    return outputState ;
+    let copySave = {...this._wamNode.module.gui.folders}
+    return  {current : outputStateCurrent, save : copySave, output :this._output.gain.value} ;
   }
 
   /**
@@ -128,11 +126,14 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * @author  Yann Forner
    */
    async setState(state) {
-    window.localStorage["pedalBoardSaves"] = JSON.stringify(state.save);
+    this._wamNode.module.gui.folders = state.save;
     this.disconnectNodes(this._wamNode.module.gui.board.childNodes);
     this._wamNode.module.gui.board.innerHTML = "";
-    this._wamNode.module.loadSave(state.current);
-   }
+    this._output.gain.value = state.output;
+    this._wamNode.module.gui.saveMenu.innerHTML = this._wamNode.module.gui.loadSaves();
+    console.log(this._wamNode.module.gui.body)
+    this._wamNode.module.gui.body.appendChild(this._wamNode.module.gui.saveMenu);
+  }
 
   /**
    * Trigger an event to inform the ParamMgrNode of a change in order or an addition/deletion of the nodes in the PedalBoard.
