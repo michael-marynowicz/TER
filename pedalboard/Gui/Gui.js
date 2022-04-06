@@ -28,8 +28,6 @@ export default class pedalboardGui extends HTMLElement {
     this.init();
   }
 
-  PRESETS = {};
-
   /**
    * Initlialise the differents elements of the gui. The PedalBoard is made from 3 sections, the
    * thumnails to select the WAM to add, the board where you can see the Gui of the
@@ -43,7 +41,7 @@ export default class pedalboardGui extends HTMLElement {
 
     this.preview = await this.loadThumbnails();
     this.createBoard();
-    this.presetsMenu = await this.loadPresets();
+    this.presetsMenu = await this.loadPresets({});
 
     this.body.appendChild(this.preview);
     this.body.appendChild(this.board);
@@ -245,9 +243,10 @@ export default class pedalboardGui extends HTMLElement {
   }
 
   // Create the save panel.
-  async loadPresets() {
-    let file = await fetch(this._presetsUrl);
-    this.PRESETS = await file.json();
+  async loadPresets(init) {
+    //let file = await fetch(this._presetsUrl);
+    //this.PRESETS = await file.json();
+    this.PRESETS = init;
 
     let keys = Object.keys(this.PRESETS);
 
@@ -314,7 +313,7 @@ export default class pedalboardGui extends HTMLElement {
       const preset = "";
       let presetInput = this.createPresetElement(bankNameCallBack, preset);
       this.presets.appendChild(presetInput);
-      this.PRESETS[bank][preset] = [];
+      this.PRESETS[bank][preset] = { nodes: [], gain: this._plug.pedalboardNode._output.gain.value };
       presetInput.lastChild.previousSibling.click();
     });
     this.presets.appendChild(button);
@@ -333,13 +332,13 @@ export default class pedalboardGui extends HTMLElement {
     this._plug.loadState(this.PRESETS[bank][preset]);
 
     let cat = document.createElement("h4");
-    cat.innerHTML = `Categorie: ${bank}`;
+    cat.innerHTML = `Bank: ${bank}`;
 
     let name = document.createElement("h4");
     name.innerHTML = `Name: ${preset}`;
 
     let ul = document.createElement("ul");
-    this.PRESETS[bank][preset].waps.forEach((node) => {
+    this.PRESETS[bank][preset].nodes.forEach((node) => {
       let li = document.createElement("li");
       li.innerHTML = node.name;
       ul.appendChild(li);
@@ -439,7 +438,7 @@ export default class pedalboardGui extends HTMLElement {
 
     preset.append(
       this.createLiButton(this._saveSVGUrl, "SAVE", () => {
-        this._plug.pedalboardNode.getState(this.board.childNodes).then((preset) => {
+        this._plug.pedalboardNode.getAudioState(this.board.childNodes).then((preset) => {
           this.PRESETS[bank][text.innerHTML] = preset;
         });
       })

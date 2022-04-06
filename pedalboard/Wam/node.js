@@ -105,12 +105,42 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * @returns The state of the PedalBoard
    * @author Quentin Beauchet, Yann Forner
    */
-  async getState(nodes) {
+  async getState() {
+    let gui = this._wamNode.module.gui;
+    let state = await this.getAudioState(gui.board.childNodes);
+    /*
+    state["presets"] = {};
+
+    const banks = Object.keys(gui.PRESETS);
+    for (let bank of banks) {
+      let copy = {};
+      const presets = Object.keys(gui.PRESETS[bank]);
+      for (let preset of presets) {
+        copy[preset] = JSON.parse(JSON.stringify(gui.PRESETS[bank][preset]));
+      }
+      state["presets"][bank] = copy;
+    }*/
+    state["presets"] = deepCopyObj(gui.PRESETS);
+
+    setTimeout(() => {
+      console.log("SAVE", JSON.stringify(gui.PRESETS));
+    }, 1000);
+
+    return state;
+  }
+
+  /**
+   * Return the state of the PedalBoard without the presets to avoid infinite recursive Object.
+   * @param {HTMLElement} nodes
+   * @returns The state of the PedalBoard without the presets.
+   * @author Quentin Beauchet
+   */
+  async getAudioState(nodes) {
     let ids = Array.from(nodes).map((el) => el.id);
     let states = await Promise.all(ids.map((id) => this.nodes[id].node.getState()));
 
     return {
-      waps: states.map((el, index) => ({
+      nodes: states.map((el, index) => ({
         name: this.nodes[ids[index]].name,
         state: el,
       })),
@@ -124,13 +154,13 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * @author  Yann Forner
    */
   async setState(state) {
-    this._wamNode.module.gui.folders = state.save;
-    this.disconnectNodes(this._wamNode.module.gui.board.childNodes);
-    this._wamNode.module.loadSave(state.current);
-    this._wamNode.module.gui.board.innerHTML = "";
-    this._output.gain.value = state.output;
-    this._wamNode.module.gui.saveMenu.innerHTML = this._wamNode.module.gui.loadSaves();
-    this._wamNode.module.gui.body.appendChild(this._wamNode.module.gui.saveMenu);
+    await this._wamNode.module.loadState(state);
+    let gui = this._wamNode.module.gui;
+    gui.body.removeChild(gui.presetsMenu);
+    console.log("SET", state.presets);
+
+    gui.presetsMenu = await gui.loadPresets(state.presets);
+    gui.body.appendChild(gui.presetsMenu);
   }
 
   /**
@@ -234,4 +264,28 @@ export default class PedalBoardNode extends CompositeAudioNode {
     });
     this._wamNode.call("scheduleEvents", ...events);
   }
+}
+
+function deepCopyObj(obj) {
+  if (null == obj || "object" != typeof obj) return obj;
+  if (obj instanceof Date) {
+    var copy = new Date();
+    copy.setTime(obj.getTime());
+    return copy;
+  }
+  if (obj instanceof Array) {
+    var copy = [];
+    for (var i = 0, len = obj.length; i < len; i++) {
+      copy[i] = deepCopyObj(obj[i]);
+    }
+    return copy;
+  }
+  if (obj instanceof Object) {
+    var copy = {};
+    for (var attr in obj) {
+      if (obj.hasOwnProperty(attr)) copy[attr] = deepCopyObj(obj[attr]);
+    }
+    return copy;
+  }
+  throw new Error("Unable to copy obj this object.");
 }

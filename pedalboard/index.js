@@ -96,7 +96,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
   }
 
   async loadState(state) {
-    for (let el of state.waps) {
+    for (let el of state.nodes) {
       await this.addWAM(el.name, el.state);
     }
     this.pedalboardNode._output.gain.value = state.gain;
