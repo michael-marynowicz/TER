@@ -106,11 +106,13 @@ export default class PedalBoardNode extends CompositeAudioNode {
    */
   async getState() {
     let outputStateCurrent = []; 
+    let arrayNodes = [];
+    Array.from(this._wamNode.module.gui.board.childNodes).forEach((val)=>{arrayNodes.push(val.innerText)});
     for (const key in this.nodes) {
       let module = this.nodes[key];
-      for (let i = 0; i < this._wamNode.module.gui.board.childNodes.length; i++) {
-        const element = this._wamNode.module.gui.board.childNodes[i];
-        if (element.innerText === module.name){
+      for (let i = 0; i < arrayNodes.length; i++) {
+        if (arrayNodes[i] === module.name){
+          arrayNodes[i] ="";
           outputStateCurrent[i] = {name: module.name, state: await module.node.getState()}
           break;
         }
