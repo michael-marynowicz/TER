@@ -212,7 +212,7 @@ export default class pedalboardGui extends HTMLElement {
     
 
     let keys = Object.keys(this.folders);
-
+ 
     let savesInfos = document.createElement("div");
     savesInfos.id = "savesInfos";
 
@@ -226,9 +226,9 @@ export default class pedalboardGui extends HTMLElement {
     this.infos.id = "infos";
 
     let categoriesTitle = document.createElement("h1");
-    categoriesTitle.innerHTML = "Categories";
+    categoriesTitle.innerHTML = "Banks";
     let savesTitle = document.createElement("h1");
-    savesTitle.innerHTML = "Saves";
+    savesTitle.innerHTML = "Presets";
     let infosTitle = document.createElement("h1");
     infosTitle.innerHTML = "Information";
 
@@ -241,10 +241,17 @@ export default class pedalboardGui extends HTMLElement {
     return savesInfos;
   }
 
+  refreshSaves(){
+    let keys = Object.keys(this.folders);
+    console.log("-------------");
+    this.categories.parentNode.replaceChild(this.createCategories(keys),this.categories);
+    this.saves.innerHTML = "";
+    this.infos.innerHTML = "";
+  }
+
   // Create the list of categories.
   createCategories(keys) {
     let categories = document.createElement("ul");
-
     let button = document.createElement("button");
     button.innerHTML = "New Categorie";
     button.classList.add("addBtn");
