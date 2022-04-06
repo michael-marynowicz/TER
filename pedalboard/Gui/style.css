@@ -32,8 +32,8 @@ img {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  height: 250px;
-  padding: 1rem 1rem 0 1rem;
+  height: 230px;
+  padding: 1rem;
   overflow-x: auto;
   overflow-y: hidden;
   border: 1px solid #dee2e6;
@@ -49,7 +49,7 @@ img {
   flex-shrink: 0;
 }
 
-#savesInfos {
+#presetsInfos {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   color: black;
@@ -62,21 +62,21 @@ img {
   margin: 0;
 }
 
-#categories,
-#saves,
+#banks,
+#presets,
 #infos,
-#savesInfos > h1 {
+#presetsInfos > h1 {
   border-right: 1px solid #dee2e6;
   margin: 0;
 }
 
 #infos,
-#savesInfos > h1:last-of-type {
+#presetsInfos > h1:last-of-type {
   border-right: none;
 }
 
-#categories,
-#saves,
+#banks,
+#presets,
 #infos {
   border-top: none;
   padding-bottom: 0.5rem;
@@ -84,7 +84,7 @@ img {
   overflow-y: auto;
 }
 
-#savesInfos > h1 {
+#presetsInfos > h1 {
   border-bottom: none;
   text-align: center;
 }
@@ -146,20 +146,20 @@ select {
   text-transform: uppercase;
 }
 
-.saveElement,
-.categorieElement {
+.presetElement,
+.bankElement {
   display: flex;
   justify-content: space-between;
   width: 100%;
 }
 
-.saveElement > span,
-.categorieElement > span {
+.presetElement > span,
+.bankElement > span {
   flex-grow: 1;
 }
 
-.saveElement > span > input,
-.categorieElement > span > input {
+.presetElement > span > input,
+.bankElement > span > input {
   width: 95%;
 }
 

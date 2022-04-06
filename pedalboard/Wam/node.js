@@ -1,4 +1,4 @@
-import CompositeAudioNode from "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk-parammgr/src/CompositeAudioNode.js";
+import CompositeAudioNode from "https://mainline.i3s.unice.fr/wam2/packages/sdk-parammgr/src/CompositeAudioNode.js";
 
 export default class PedalBoardNode extends CompositeAudioNode {
   /**
@@ -24,7 +24,8 @@ export default class PedalBoardNode extends CompositeAudioNode {
   }
 
   /**
-   * Create the input and outpur nodes of the PedalBoard.
+   * Create the input and output nodes of the PedalBoard.
+   * The output node act as a gain for the PedalBoard.
    * @author Quentin Beauchet
    */
   createNodes() {
@@ -104,34 +105,31 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * @returns The state of the PedalBoard
    * @author Quentin Beauchet, Yann Forner
    */
-  async getState() {
-    let outputStateCurrent = []; 
-    for (const key in this.nodes) {
-      let module = this.nodes[key];
-      for (let i = 0; i < this._wamNode.module.gui.board.childNodes.length; i++) {
-        const element = this._wamNode.module.gui.board.childNodes[i];
-        if (element.innerText === module.name){
-          outputStateCurrent[i] = {name: module.name, state: await module.node.getState()}
-          break;
-        }
-      }
-    }
-    let copySave = {...this._wamNode.module.gui.folders}
-    return  {current : outputStateCurrent, save : copySave, output :this._output.gain.value} ;
+  async getState(nodes) {
+    let ids = Array.from(nodes).map((el) => el.id);
+    let states = await Promise.all(ids.map((id) => this.nodes[id].node.getState()));
+
+    return {
+      waps: states.map((el, index) => ({
+        name: this.nodes[ids[index]].name,
+        state: el,
+      })),
+      gain: this._output.gain.value,
+    };
   }
 
   /**
    * This function clear the board, disconnect all the modules, add the new modules from the param and set their states
-   * @param {dict}  state the saved Dict
+   * @param {Object} state
    * @author  Yann Forner
    */
-   async setState(state) {
+  async setState(state) {
     this._wamNode.module.gui.folders = state.save;
     this.disconnectNodes(this._wamNode.module.gui.board.childNodes);
     this._wamNode.module.gui.board.innerHTML = "";
     this._output.gain.value = state.output;
     this._wamNode.module.gui.saveMenu.innerHTML = this._wamNode.module.gui.loadSaves();
-    console.log(this._wamNode.module.gui.body)
+    console.log(this._wamNode.module.gui.body);
     this._wamNode.module.gui.body.appendChild(this._wamNode.module.gui.saveMenu);
   }
 
@@ -195,7 +193,6 @@ export default class PedalBoardNode extends CompositeAudioNode {
   /**
    * Returns the parameter values from a node in the PedalBoard, we also store the response in this.lastParameterValue
    * if we need it inside scheduleEvents().
-   *
    * @param {boolean} normalized This parameter is heredited from CompositeAudioNode but it is not used.
    * @param {string} parameterIdQuery The id of the node in the PedalBoard, it was set in getParameterInfo().
    * @returns The parameter values of the node.
@@ -217,7 +214,6 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * and if the id is PedalBoard/Mix we change the _output node of the PedalBoard.
    * Otherwise we get the informations from the last node where the getParameterValues()
    * was called and we propagate the event to it.
-   *
    * @param  {WamEvent[]} events List of events to propagate to the nodes in the PedalBoard.
    * @author Quentin Beauchet
    */

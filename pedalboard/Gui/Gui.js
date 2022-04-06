@@ -10,7 +10,7 @@ const getBasetUrl = (relativeURL) => {
 export default class pedalboardGui extends HTMLElement {
   _baseURL = getBasetUrl(new URL(".", import.meta.url));
 
-  _savesUrl = `${this._baseURL.slice(0, this._baseURL.lastIndexOf("/"))}/saves.json`;
+  _presetsUrl = `${this._baseURL.slice(0, this._baseURL.lastIndexOf("/"))}/presets.json`;
 
   _saveSVGUrl = `${this._baseURL}/assets/saveButton.svg`;
   _editSVGUrl = `${this._baseURL}/assets/editButton.svg`;
@@ -28,29 +28,44 @@ export default class pedalboardGui extends HTMLElement {
     this.init();
   }
 
-  // Initlialise the differents elements of the gui
+  PRESETS = {};
+
+  /**
+   * Initlialise the differents elements of the gui. The PedalBoard is made from 3 sections, the
+   * thumnails to select the WAM to add, the board where you can see the Gui of the
+   * plugins and you can drag and drop them to change the order or remove them with the
+   * cross and the presets section where you can save and load presets.
+   * @author Quentin Beauchet
+   */
   async init() {
     this.setStyle();
     this.body = document.createElement("body");
 
     this.preview = await this.loadThumbnails();
     this.createBoard();
-    this.saveMenu = await this.loadSaves();
+    this.presetsMenu = await this.loadPresets();
 
     this.body.appendChild(this.preview);
     this.body.appendChild(this.board);
-    this.body.appendChild(this.saveMenu);
+    this.body.appendChild(this.presetsMenu);
 
     this._root.appendChild(this.body);
   }
 
-  // Load the thumbnails of the plugins
+  /**
+   * Loads the thumbnails for the plugins and create a filter selector based on their
+   * keywords in their respective descriptor.json and for each image it had an event listener
+   * to add the plugin to the board when clicked.
+   * It needs to be asynchonous to be consistant each time in the order of the loaded plugins.
+   * @returns The thumbail section.
+   * @author Quentin Beauchet
+   */
   async loadThumbnails() {
-    let pedals = Object.keys(this._plug.pedals);
+    let pedals = Object.keys(this._plug.WAMS);
     let keywords = { all: [] };
     let urls = await Promise.all(
       pedals.map((el) => {
-        let pedal = this._plug.pedals[el];
+        let pedal = this._plug.WAMS[el];
         keywords["all"].push(el);
         pedal.descriptor.keywords.forEach((k) => {
           if (!(k in keywords)) {
@@ -75,7 +90,7 @@ export default class pedalboardGui extends HTMLElement {
       let currentKey = keys[select.selectedIndex];
       this.images.innerHTML = "";
       keywords[currentKey].forEach((el) => {
-        this.images.appendChild(this._plug.pedals[el].img);
+        this.images.appendChild(this._plug.WAMS[el].img);
       });
     };
     select.addEventListener("change", (event) => refreshImages(event.target));
@@ -92,10 +107,10 @@ export default class pedalboardGui extends HTMLElement {
       let img = document.createElement("img");
       img.src = el;
       img.setAttribute("crossorigin", "anonymous");
-      img.addEventListener("click", () => this._plug.addPedal(pedals[index]), {
+      img.addEventListener("click", () => this._plug.addWAM(pedals[index]), {
         passive: false,
       });
-      this._plug.pedals[pedals[index]].img = img;
+      this._plug.WAMS[pedals[index]].img = img;
     });
     preview.appendChild(this.images);
 
@@ -103,6 +118,11 @@ export default class pedalboardGui extends HTMLElement {
     return preview;
   }
 
+  /**
+   * Create the board and a dropZone to allow a change in order of the plugins.
+   * @returns The board section where the guis from the pedals are listed.
+   * @author Quentin Beauchet
+   */
   createBoard() {
     this.board = document.createElement("div");
     this.board.id = "board";
@@ -122,7 +142,14 @@ export default class pedalboardGui extends HTMLElement {
     return this.board;
   }
 
-  // Add the plugin to the board.
+  /**
+   * Create the gui for the plugin and then the wrapper around it.
+   * We need to resize it with resizeWrapper at the end.
+   * @param {WebAudioModule} instance
+   * @param {HTMLElement} img
+   * @param {int} id
+   * @author Quentin Beauchet
+   */
   addPlugin(instance, img, id) {
     instance.createGui().then((gui) => {
       let wrapper = document.createElement("article");
@@ -168,7 +195,15 @@ export default class pedalboardGui extends HTMLElement {
     });
   }
 
-  // Scale the gui of the node to the height of the board;
+  /**
+   * Scale the gui of the plugin.
+   * @param {HTMLElement} wrapper
+   * @param {HTMLElement} header
+   * @param {HTMLElement} title
+   * @param {HTMLElement} cross
+   * @param {HTMLElement} gui
+   * @author Quentin Beauchet
+   */
   resizeWrapper(wrapper, header, title, cross, gui) {
     const scale = 200 / gui.getBoundingClientRect().height;
 
@@ -193,7 +228,11 @@ export default class pedalboardGui extends HTMLElement {
     cross.style.height = `${Math.round(15 / scale)}px`;
   }
 
-  // Return the nodeArticle when selecting child node instead of itself with drag and drop.
+  /**
+   * Return the nodeArticle when selecting child node instead of itself with drag and drop.
+   * @param {HTMLElement[]} path
+   * @returns The wrapper selected.
+   */
   getWrapper(path) {
     let pre;
     for (let e of path) {
@@ -206,102 +245,101 @@ export default class pedalboardGui extends HTMLElement {
   }
 
   // Create the save panel.
-  async loadSaves() {
-    let file = await fetch(this._savesUrl);
-    this.folders = await file.json();
-    
+  async loadPresets() {
+    let file = await fetch(this._presetsUrl);
+    this.PRESETS = await file.json();
 
-    let keys = Object.keys(this.folders);
+    let keys = Object.keys(this.PRESETS);
 
-    let savesInfos = document.createElement("div");
-    savesInfos.id = "savesInfos";
+    let presetsInfos = document.createElement("div");
+    presetsInfos.id = "presetsInfos";
 
-    this.categories = this.createCategories(keys);
-    this.categories.id = "categories";
+    this.banks = this.createBanks(keys);
+    this.banks.id = "banks";
 
-    this.saves = document.createElement("ul");
-    this.saves.id = "saves";
+    this.presets = document.createElement("ul");
+    this.presets.id = "presets";
 
     this.infos = document.createElement("div");
     this.infos.id = "infos";
 
-    let categoriesTitle = document.createElement("h1");
-    categoriesTitle.innerHTML = "Categories";
-    let savesTitle = document.createElement("h1");
-    savesTitle.innerHTML = "Saves";
+    let banksTitle = document.createElement("h1");
+    banksTitle.innerHTML = "Banks";
+    let presetsTitle = document.createElement("h1");
+    presetsTitle.innerHTML = "Presets";
     let infosTitle = document.createElement("h1");
     infosTitle.innerHTML = "Information";
 
-    savesInfos.appendChild(categoriesTitle);
-    savesInfos.appendChild(savesTitle);
-    savesInfos.appendChild(infosTitle);
-    savesInfos.appendChild(this.categories);
-    savesInfos.appendChild(this.saves);
-    savesInfos.appendChild(this.infos);
-    return savesInfos;
+    presetsInfos.appendChild(banksTitle);
+    presetsInfos.appendChild(presetsTitle);
+    presetsInfos.appendChild(infosTitle);
+    presetsInfos.appendChild(this.banks);
+    presetsInfos.appendChild(this.presets);
+    presetsInfos.appendChild(this.infos);
+    return presetsInfos;
   }
 
-  // Create the list of categories.
-  createCategories(keys) {
-    let categories = document.createElement("ul");
+  // Create the list of banks.
+  createBanks(keys) {
+    let banks = document.createElement("ul");
 
     let button = document.createElement("button");
-    button.innerHTML = "New Categorie";
+    button.innerHTML = "New Bank";
     button.classList.add("addBtn");
     button.addEventListener("click", () => {
-      const categorie = "";
-      let saveInput = this.createCategorieElement(categorie);
-      this.categories.appendChild(saveInput);
-      this.folders[categorie] = [];
-      saveInput.lastChild.previousSibling.click();
+      const bank = "";
+      let presetInput = this.createBankElement(bank);
+      this.banks.appendChild(presetInput);
+      this.PRESETS[bank] = [];
+      presetInput.lastChild.previousSibling.click();
     });
-    categories.appendChild(button);
+    banks.appendChild(button);
 
-    keys.forEach((categorie) => {
-      let el = this.createCategorieElement(categorie);
-      categories.appendChild(el);
+    keys.forEach((bank) => {
+      let el = this.createBankElement(bank);
+      banks.appendChild(el);
     });
 
-    return categories;
+    return banks;
   }
 
-  // Display the save in the categorie.
-  displayCategorie(categorieNameCallBack) {
-    this.saves.innerHTML = "";
-    const categorie = categorieNameCallBack();
+  // Display the save in the banks.
+  displayBank(bankNameCallBack) {
+    this.presets.innerHTML = "";
+    const bank = bankNameCallBack();
     let button = document.createElement("button");
-    button.innerHTML = "New Save";
+    button.innerHTML = "New Preset";
     button.classList.add("addBtn");
     button.addEventListener("click", () => {
-      const save = "";
-      let saveInput = this.createSaveElement(categorieNameCallBack, save);
-      this.saves.appendChild(saveInput);
-      this.folders[categorie][save] = [];
-      saveInput.lastChild.previousSibling.click();
+      const preset = "";
+      let presetInput = this.createPresetElement(bankNameCallBack, preset);
+      this.presets.appendChild(presetInput);
+      this.PRESETS[bank][preset] = [];
+      presetInput.lastChild.previousSibling.click();
     });
-    this.saves.appendChild(button);
+    this.presets.appendChild(button);
 
-    Object.keys(this.folders[categorie]).forEach((save) => {
-      this.saves.appendChild(this.createSaveElement(categorieNameCallBack, save));
+    Object.keys(this.PRESETS[bank]).forEach((preset) => {
+      this.presets.appendChild(this.createPresetElement(bankNameCallBack, preset));
     });
   }
 
   // Load the save to the audioNode and show it's informations.
-  loadSave(categorieNameCallBack, save) {
-    const categorie = categorieNameCallBack();
+  loadPreset(bankNameCallBack, preset) {
+    const bank = bankNameCallBack();
     this.infos.innerHTML = "";
     this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
     this.board.innerHTML = "";
-    this._plug.loadSave(this.folders[categorie][save]);
+    this._plug.loadState(this.PRESETS[bank][preset]);
 
     let cat = document.createElement("h4");
-    cat.innerHTML = `Categorie: ${categorie}`;
+    cat.innerHTML = `Categorie: ${bank}`;
 
     let name = document.createElement("h4");
-    name.innerHTML = `Name: ${save}`;
+    name.innerHTML = `Name: ${preset}`;
 
     let ul = document.createElement("ul");
-    this.folders[categorie][save].forEach((node) => {
+    this.PRESETS[bank][preset].waps.forEach((node) => {
       let li = document.createElement("li");
       li.innerHTML = node.name;
       ul.appendChild(li);
@@ -313,75 +351,85 @@ export default class pedalboardGui extends HTMLElement {
   }
 
   // Rename a save.
-  renameSave(categorie, oldName, newName) {
+  renamePreset(bank, oldName, newName) {
     if (newName.trim().length == 0) {
-      alert("Invalid save name");
+      alert("Invalid preset name");
       return false;
     }
     if (newName != oldName) {
-      if (this.folders[categorie][newName]) {
-        alert("This save name is already used");
+      if (this.PRESETS[bank][newName]) {
+        alert("This preset name is already used");
         return false;
       }
-      this.folders[categorie][newName] = this.folders[categorie][oldName];
-      delete this.folders[categorie][oldName];
+      this.PRESETS[bank][newName] = this.PRESETS[bank][oldName];
+      delete this.PRESETS[bank][oldName];
     }
     return true;
   }
 
-  // Rename a categorie.
-  renameCategorie(oldName, newName) {
+  // Rename a bank.
+  renameBank(oldName, newName) {
     if (newName.trim().length == 0) {
-      alert("Invalid categorie name");
+      alert("Invalid bank name");
       return false;
     }
     if (newName != oldName) {
-      if (this.folders[newName]) {
-        alert("This categorie name is already used");
+      if (this.PRESETS[newName]) {
+        alert("This bank name is already used");
         return false;
       }
-      this.folders[newName] = this.folders[oldName];
-      delete this.folders[oldName];
+      this.PRESETS[newName] = this.PRESETS[oldName];
+      delete this.PRESETS[oldName];
     }
     return true;
   }
 
   // Delete a save.
-  deleteSave(categorieNameCallBack, saveNameCallBack, node) {
-    delete this.folders[categorieNameCallBack()][saveNameCallBack()];
-    this.saves.removeChild(node);
+  deletePreset(bankNameCallBack, presetsNameCallBack, node) {
+    delete this.PRESETS[bankNameCallBack()][presetsNameCallBack()];
+    this.presets.removeChild(node);
   }
 
-  // Delete a categorie if it's empty.
-  deleteCategorie(categorieNameCallBack, node) {
-    const categorie = categorieNameCallBack();
-    if (Object.keys(this.folders[categorie]).length != 0) {
-      alert("Empty the categorie before trying to delete it");
+  /**
+   * Delete a bank if it's empty.
+   * @param {function} bankNameCallBack
+   * @param {HTMLElement} node
+   */
+  deleteBank(bankNameCallBack, node) {
+    const bank = bankNameCallBack();
+    if (Object.keys(this.PRESETS[bank]).length != 0) {
+      alert("Empty the bank before trying to delete it");
     } else {
-      delete this.folders[categorie];
-      this.categories.removeChild(node);
+      delete this.PRESETS[bank];
+      this.banks.removeChild(node);
     }
   }
 
-  // Create a save modifiable with the buttons to it's right, it can hold the informations about the plugins.
-  createSaveElement(categorieNameCallBack, saveName) {
-    const categorie = categorieNameCallBack();
+  /**
+   * Create a preset editable with the buttons to it's right, it can save the onfiguration of the board.
+   * @param {function} bankNameCallBack
+   * @param {string} presetName
+   * @returns The preset HTMLElement.
+   * @author Quentin Beauchet
+   */
+  createPresetElement(bankNameCallBack, presetName) {
+    const bank = bankNameCallBack();
 
-    let el = document.createElement("li");
-    el.classList.add("saveElement");
+    let preset = document.createElement("li");
+    preset.classList.add("presetElement");
 
     let text = document.createElement("span");
-    text.innerHTML = saveName;
-    const clickEventCallBack = () => this.loadSave(categorieNameCallBack, text.innerHTML);
+    text.innerHTML = presetName;
+    const clickEventCallBack = () => this.loadPreset(bankNameCallBack, text.innerHTML);
     text.addEventListener("click", clickEventCallBack);
-    el.append(text);
+    preset.append(text);
 
     let input = document.createElement("input");
     input.addEventListener("keyup", (e) => {
       if (e.key == "Enter") input.blur();
     });
     input.addEventListener("blur", (e) => {
-      if (this.renameSave(categorie, e.target.placeholder, e.target.value)) {
+      if (this.renamePreset(bank, e.target.placeholder, e.target.value)) {
         text.innerHTML = e.target.value;
         text.addEventListener("click", clickEventCallBack);
       } else {
@@ -389,15 +437,15 @@ export default class pedalboardGui extends HTMLElement {
       }
     });
 
-    el.append(
+    preset.append(
       this.createLiButton(this._saveSVGUrl, "SAVE", () => {
-        this._plug.pedalboardNode.getState(this.board.childNodes).then((save) => {
-          this.folders[categorie][text.innerHTML] = save;
+        this._plug.pedalboardNode.getState(this.board.childNodes).then((preset) => {
+          this.PRESETS[bank][text.innerHTML] = preset;
         });
       })
     );
 
-    el.append(
+    preset.append(
       this.createLiButton(this._editSVGUrl, "EDIT", () => {
         text.removeEventListener("click", clickEventCallBack);
         input.value = text.innerHTML;
@@ -408,33 +456,38 @@ export default class pedalboardGui extends HTMLElement {
       })
     );
 
-    el.append(
+    preset.append(
       this.createLiButton(this._deleteSVGUrl, "DELETE", () =>
-        this.deleteSave(categorieNameCallBack, () => text.innerHTML, el)
+        this.deletePreset(bankNameCallBack, () => text.innerHTML, preset)
       )
     );
 
-    return el;
+    return preset;
   }
 
-  // Create a categorie modifiable with the buttons to it's right, it can hold multiples saves.
-  createCategorieElement(name) {
-    let el = document.createElement("li");
-    el.classList.add("categorieElement");
+  /**
+   * Create a bank editable with the buttons to it's right, it can hold multiples presets.
+   * @param {string} name
+   * @returns The bank HTMLElement.
+   * @author Quentin Beauchet
+   */
+  createBankElement(name) {
+    let bank = document.createElement("li");
+    bank.classList.add("bankElement");
 
-    const clickEventCallBack = () => this.displayCategorie(() => text.innerHTML);
+    const clickEventCallBack = () => this.displayBank(() => text.innerHTML);
 
     let text = document.createElement("span");
     text.innerHTML = name;
     text.addEventListener("click", clickEventCallBack);
-    el.appendChild(text);
+    bank.appendChild(text);
 
     let input = document.createElement("input");
     input.addEventListener("keyup", (e) => {
       if (e.key == "Enter") input.blur();
     });
     input.addEventListener("blur", (e) => {
-      if (this.renameCategorie(e.target.placeholder, e.target.value)) {
+      if (this.renameBank(e.target.placeholder, e.target.value)) {
         text.innerHTML = e.target.value;
         text.addEventListener("click", clickEventCallBack);
       } else {
@@ -442,7 +495,7 @@ export default class pedalboardGui extends HTMLElement {
       }
     });
 
-    el.append(
+    bank.append(
       this.createLiButton(this._editSVGUrl, "EDIT", () => {
         text.removeEventListener("click", clickEventCallBack);
         input.value = text.innerHTML;
@@ -453,12 +506,19 @@ export default class pedalboardGui extends HTMLElement {
       })
     );
 
-    el.append(this.createLiButton(this._deleteSVGUrl, "DELETE", () => this.deleteCategorie(() => text.innerHTML, el)));
+    bank.append(this.createLiButton(this._deleteSVGUrl, "DELETE", () => this.deleteBank(() => text.innerHTML, bank)));
 
-    return el;
+    return bank;
   }
 
-  // Create a button for a categorie or a save
+  /**
+   * Create a button (img) for a bank or a preset.
+   * @param {string} url
+   * @param {string} alt
+   * @param {function} callback
+   * @returns The button HTMLElement.
+   * @author Quentin Beauchet
+   */
   createLiButton(url, alt, callback) {
     let img = document.createElement("img");
     img.setAttribute("crossorigin", "anonymous");
@@ -469,13 +529,18 @@ export default class pedalboardGui extends HTMLElement {
     return img;
   }
 
-  //Return DataWidth and DataHeight values
+  /**
+   * Return DataWidth and DataHeight values.
+   */
   get properties() {
     const bbox = this.getBoundingClientRect();
     return { dataWidth: { value: bbox.width }, dataHeight: { value: bbox.height } };
   }
 
-  // Link the css
+  /**
+   * Link the css.
+   * @author Quentin Beauchet
+   */
   setStyle() {
     const linkElem = document.createElement("link");
     linkElem.setAttribute("rel", "stylesheet");
