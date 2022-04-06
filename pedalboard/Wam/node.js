@@ -126,10 +126,10 @@ export default class PedalBoardNode extends CompositeAudioNode {
   async setState(state) {
     this._wamNode.module.gui.folders = state.save;
     this.disconnectNodes(this._wamNode.module.gui.board.childNodes);
+    this._wamNode.module.loadSave(state.current);
     this._wamNode.module.gui.board.innerHTML = "";
     this._output.gain.value = state.output;
     this._wamNode.module.gui.saveMenu.innerHTML = this._wamNode.module.gui.loadSaves();
-    console.log(this._wamNode.module.gui.body);
     this._wamNode.module.gui.body.appendChild(this._wamNode.module.gui.saveMenu);
   }
 
