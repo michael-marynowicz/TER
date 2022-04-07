@@ -1,0 +1,56 @@
+{
+  "Rock": {
+    "Nirvana": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ],
+    "Black Sabbath": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ]
+  },
+  "Pop": {
+    "Queen": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ],
+    "The Beatles": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ],
+    "AC/DC": [
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 0, "time": 0.5, "enabled": 1 }
+      },
+      {
+        "name": "PingPongDelay",
+        "state": { "feedback": 0.5, "mix": 1, "time": 0.5, "enabled": 1 }
+      }
+    ]
+  }
+}

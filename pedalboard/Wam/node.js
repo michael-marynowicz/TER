@@ -1,4 +1,4 @@
-import CompositeAudioNode from "https://mainline.i3s.unice.fr/wam2/packages/sdk-parammgr/src/CompositeAudioNode.js";
+import CompositeAudioNode from "https://mainline.i3s.unice.fr/PedalEditor/Back-End/functional-pedals/published/freeverbForBrowser/utils/sdk-parammgr/src/CompositeAudioNode.js";
 
 export default class PedalBoardNode extends CompositeAudioNode {
   /**
@@ -24,8 +24,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
   }
 
   /**
-   * Create the input and output nodes of the PedalBoard.
-   * The output node act as a gain for the PedalBoard.
+   * Create the input and outpur nodes of the PedalBoard.
    * @author Quentin Beauchet
    */
   createNodes() {
@@ -107,60 +106,26 @@ export default class PedalBoardNode extends CompositeAudioNode {
    */
   async getState() {
     let gui = this._wamNode.module.gui;
-    let state = await this.getAudioState(gui.board.childNodes);
-    /*
-    state["presets"] = {};
-
-    const banks = Object.keys(gui.PRESETS);
-    for (let bank of banks) {
-      let copy = {};
-      const presets = Object.keys(gui.PRESETS[bank]);
-      for (let preset of presets) {
-        copy[preset] = JSON.parse(JSON.stringify(gui.PRESETS[bank][preset]));
-      }
-      state["presets"][bank] = copy;
-    }*/
-    state["presets"] = deepCopyObj(gui.PRESETS);
-
-    setTimeout(() => {
-      console.log("SAVE", JSON.stringify(gui.PRESETS));
-    }, 1000);
-
-    return state;
-  }
-
-  /**
-   * Return the state of the PedalBoard without the presets to avoid infinite recursive Object.
-   * @param {HTMLElement} nodes
-   * @returns The state of the PedalBoard without the presets.
-   * @author Quentin Beauchet
-   */
-  async getAudioState(nodes) {
-    let ids = Array.from(nodes).map((el) => el.id);
+    let ids = Array.from(gui.board.childNodes).map((el) => el.id);
     let states = await Promise.all(ids.map((id) => this.nodes[id].node.getState()));
 
-    return {
-      nodes: states.map((el, index) => ({
-        name: this.nodes[ids[index]].name,
-        state: el,
-      })),
-      gain: this._output.gain.value,
-    };
+    let current = states.map((el, index) => ({
+      name: this.nodes[ids[index]].name,
+      state: el,
+    }));
+    let presets = JSON.parse(JSON.stringify(gui.PresetsBank));
+
+    return { current, presets };
   }
 
   /**
    * This function clear the board, disconnect all the modules, add the new modules from the param and set their states
-   * @param {Object} state
+   * @param {dict}  state the saved Dict
    * @author  Yann Forner
    */
   async setState(state) {
-    await this._wamNode.module.loadState(state);
-    let gui = this._wamNode.module.gui;
-    gui.body.removeChild(gui.presetsMenu);
-    console.log("SET", state.presets);
-
-    gui.presetsMenu = await gui.loadPresets(state.presets);
-    gui.body.appendChild(gui.presetsMenu);
+    this._wamNode.module.loadPreset(state.current);
+    await this._wamNode.module.gui.reloadPresets(state.presets);
   }
 
   /**
@@ -223,6 +188,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
   /**
    * Returns the parameter values from a node in the PedalBoard, we also store the response in this.lastParameterValue
    * if we need it inside scheduleEvents().
+   *
    * @param {boolean} normalized This parameter is heredited from CompositeAudioNode but it is not used.
    * @param {string} parameterIdQuery The id of the node in the PedalBoard, it was set in getParameterInfo().
    * @returns The parameter values of the node.
@@ -244,6 +210,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * and if the id is PedalBoard/Mix we change the _output node of the PedalBoard.
    * Otherwise we get the informations from the last node where the getParameterValues()
    * was called and we propagate the event to it.
+   *
    * @param  {WamEvent[]} events List of events to propagate to the nodes in the PedalBoard.
    * @author Quentin Beauchet
    */
@@ -264,28 +231,4 @@ export default class PedalBoardNode extends CompositeAudioNode {
     });
     this._wamNode.call("scheduleEvents", ...events);
   }
-}
-
-function deepCopyObj(obj) {
-  if (null == obj || "object" != typeof obj) return obj;
-  if (obj instanceof Date) {
-    var copy = new Date();
-    copy.setTime(obj.getTime());
-    return copy;
-  }
-  if (obj instanceof Array) {
-    var copy = [];
-    for (var i = 0, len = obj.length; i < len; i++) {
-      copy[i] = deepCopyObj(obj[i]);
-    }
-    return copy;
-  }
-  if (obj instanceof Object) {
-    var copy = {};
-    for (var attr in obj) {
-      if (obj.hasOwnProperty(attr)) copy[attr] = deepCopyObj(obj[attr]);
-    }
-    return copy;
-  }
-  throw new Error("Unable to copy obj this object.");
 }
