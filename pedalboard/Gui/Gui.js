@@ -115,8 +115,8 @@ export default class pedalboardGui extends HTMLElement {
     }
 
     /**
-     *
-     * @param presets
+     * reLoad all presets
+     * @param presets all the presets
      * @returns {Promise<void>}
      */
     async reloadPresets(presets) {

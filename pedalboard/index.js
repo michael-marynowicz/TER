@@ -27,6 +27,10 @@ export default class PedalBoardPlugin extends WebAudioModule {
     }
   };
 
+  /**
+   * catch and convert the descriptor of a WAM in json
+   * @returns {Promise<void>}
+   */
   async _loadDescriptor() {
     const url = this._descriptorUrl;
     if (!url) throw new TypeError("Descriptor not found");
@@ -35,6 +39,11 @@ export default class PedalBoardPlugin extends WebAudioModule {
     Object.assign(this.descriptor, descriptor);
   }
 
+  /**
+   * load the descriptor and fetch for WAM from the server
+   * @param state
+   * @returns {Promise<*>}
+   */
   async initialize(state) {
     await this._loadDescriptor();
     await this.fetchServers();
@@ -93,6 +102,11 @@ export default class PedalBoardPlugin extends WebAudioModule {
     });
   }
 
+  /**
+   * connect and load WAM of a preset
+   * @param nodes WAM of a preset
+   * @returns {Promise<void>} when all the WAM are load and add to the board
+   */
   async loadPreset(nodes) {
     let board = this.pedalboardNode.module.gui.board;
     this.pedalboardNode.disconnectNodes(board.childNodes);
