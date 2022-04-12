@@ -52,11 +52,11 @@ export default class PedalBoardNode extends CompositeAudioNode {
 
   /**
    * Disconnects every nodes from the board of the Gui. It then check the nodes stored in this.nodes and
-   * if they aren't needed anymore it delete them from the object.
+   * if they aren't needed anymore it delete them from the object. The boolean forced is needed when using setState().
    * @param {HTMLCollection} nodes
    * @author Quentin Beauchet
    */
-  disconnectNodes(nodes) {
+  disconnectNodes(nodes, forced) {
     this.lastNode = this._input;
     var connectedIds = [];
     nodes.forEach((el) => {
@@ -67,9 +67,15 @@ export default class PedalBoardNode extends CompositeAudioNode {
     });
     this.lastNode.disconnect(this._output);
 
-    Object.keys(this.nodes).forEach((el) => {
-      if (!connectedIds.includes(el)) delete this.nodes[el];
-    });
+    if (forced) {
+      this.nodes = {};
+    } else {
+      //Act like a garbage collector
+      Object.keys(this.nodes).forEach((el) => {
+        if (!connectedIds.includes(el)) delete this.nodes[el];
+      });
+    }
+
     this.connectNodes([]);
   }
 
@@ -120,7 +126,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
 
   /**
    * This function clear the board, disconnect all the modules, add the new modules from the param and set their states
-   * @param {dict}  state the saved Dict
+   * @param {Object} state
    * @author  Yann Forner
    */
   async setState(state) {
