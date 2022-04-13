@@ -10,7 +10,7 @@ The objective of this project is to realize a pedalboard which contains several 
 ---
   * To use the pedalboard you have two possibilities 
     * Just go to the [GitHub Page](https://michael-marynowicz.github.io/TER/)
-    * Use it like a plugin with this url : https://michael-marynowicz.github.io/TER/pedalboard/index.js
+    * Use it like a plugin with this url : https://michael-marynowicz.github.io/pedalboard/index.js
 
 **Usage**
 ---
