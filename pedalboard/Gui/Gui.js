@@ -131,7 +131,17 @@ export default class pedalboardGui extends HTMLElement {
 
     if (this.presetsMenu) this.presetsMenu.remove();
     this.presetsMenu = await this.loadMenu();
-    this.main.appendChild(this.presetsMenu);
+
+    var collapse = document.createElement("details");
+    collapse.open = true;
+    collapse.id = "collapsePresets";
+    var title = document.createElement("summary");
+    title.innerHTML = "Presets Menu";
+
+    collapse.appendChild(title);
+    collapse.appendChild(this.presetsMenu);
+
+    this.main.appendChild(collapse);
   }
 
   /**

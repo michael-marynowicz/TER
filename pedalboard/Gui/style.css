@@ -17,7 +17,7 @@ main {
 }
 
 img {
-  max-height: 10rem;
+  max-height: 6rem;
 }
 
 #preview {
@@ -224,4 +224,16 @@ input {
   border-bottom: 0;
   border-top-left-radius: 0.25rem;
   border-top-right-radius: 0.25rem;
+}
+
+#collapsePresets {
+  background-color: var(--bg-color, #f7dba7);
+  border: 1px solid var(--border-color, #f1ab86);
+}
+
+#collapsePresets > summary {
+  border: 1px solid var(--border-color, #f1ab86);
+  border-width: 0 1px 1px 1px;
+  user-select: none;
+  text-align: center;
 }
