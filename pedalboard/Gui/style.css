@@ -1,12 +1,19 @@
 :root {
-  --main-color: #ffffff;
-  --text-color: white;
-  --bg-color: white;
-  --secondary-bg: rgb(118, 118, 118);
+  --border-color: #f1ab86;
+  --text-color: #1e2d2f;
+  --bg-color: #f7dba7;
+  --secondary-bg: #654d3b;
+  --ternary-bg: #35362d;
 }
 
-body {
+main {
   width: 1000px;
+  min-width: 500px;
+  resize: horizontal;
+  overflow: auto;
+  color: var(--text-color, #1e2d2f);
+  border: 1px solid var(--border-color, #f1ab86);
+  border-radius: 0.25rem;
 }
 
 img {
@@ -14,18 +21,17 @@ img {
 }
 
 #preview {
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color, #f1ab86);
+  border-bottom: 0;
   padding: 0.5em;
-  background-color: white;
-  border-top-left-radius: 0.25rem;
-  border-top-right-radius: 0.25rem;
-  color: black;
+  background-color: var(--bg-color, #f7dba7);
   overflow-x: auto;
 }
 
 #preview > div {
   display: flex;
-  overflow-x: scroll;
+  overflow-x: auto;
+  border-bottom: 0;
 }
 
 #board {
@@ -36,11 +42,11 @@ img {
   padding: 1rem;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid #dee2e6;
-  border-top: 0px;
-  background: white;
-  background-image: linear-gradient(#dee2e6 0.01rem, transparent 0.1em),
-    linear-gradient(90deg, #dee2e6 0.01rem, transparent 0.1em);
+  border: 1px solid var(--border-color, #f1ab86);
+  border-width: 0 1px 1px 0;
+  background: var(--bg-color, #f7dba7);
+  background-image: linear-gradient(var(--border-color, #f1ab86) 0.01rem, transparent 0.1em),
+    linear-gradient(90deg, var(--border-color, #f1ab86) 0.01rem, transparent 0.1em);
   background-size: 3em 3em;
 }
 
@@ -52,13 +58,11 @@ img {
 #presetsInfos {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  color: black;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color, #f1ab86);
   border-top: 0;
   border-bottom-left-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
-
-  background-color: white;
+  background-color: var(--bg-color, #f7dba7);
   margin: 0;
 }
 
@@ -66,7 +70,7 @@ img {
 #presets,
 #infos,
 #presetsInfos > h1 {
-  border-right: 1px solid #dee2e6;
+  border-right: 1px solid var(--border-color, #f1ab86);
   margin: 0;
 }
 
@@ -93,17 +97,14 @@ li {
   list-style-type: square;
 }
 
-.nodeArticle {
-  color: white;
-}
-
 .nodeArticle > header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: black;
   border-style: solid;
+  background-color: black;
   border-color: lightgray;
+  color: white;
   box-sizing: border-box;
 }
 
@@ -121,29 +122,32 @@ li {
 }
 
 .addBtn {
-  background-color: white;
-  color: black;
-  border: 1px solid rgb(118, 118, 118);
+  background-color: var(--bg-color, #f7dba7);
+  border: 1px solid var(--border-color, #f1ab86);
   border-radius: 0.25rem;
   text-align: center;
   font-size: 1rem;
+  color: var(--text-color, #1e2d2f);
 }
 
 .addBtn:hover {
-  background-color: rgb(118, 118, 118);
-  color: white;
+  filter: brightness(0.95);
 }
 
 select {
-  background-color: white;
-  color: black;
-  border: 1px solid rgb(118, 118, 118);
+  background-color: var(--bg-color, #f7dba7);
+  border: 1px solid var(--border-color, #f1ab86);
   width: 100%;
   text-align: center;
   font-size: 1rem;
   border-radius: 0.25rem;
   margin-bottom: 0.25em;
   text-transform: uppercase;
+}
+
+input {
+  background-color: var(--bg-color, #f7dba7);
+  border-color: var(--border-color, #f1ab86);
 }
 
 .presetElement,
@@ -173,13 +177,6 @@ select {
 
 .flex-container {
   list-style: none;
-
-  -ms-box-orient: horizontal;
-  display: -webkit-box;
-  display: -moz-box;
-  display: -ms-flexbox;
-  display: -moz-flex;
-  display: -webkit-flex;
   display: flex;
   float: left;
 }
@@ -196,7 +193,35 @@ select {
 #dropZone {
   display: inline-block;
   align-self: center;
-  border: 5px dashed black;
+  border: 5px dashed var(--border-color, #f1ab86);
   width: 100px;
-  height: 200px;
+  height: 220px;
+}
+
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color, #f7dba7);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary-bg, #654d3b);
+  border-radius: 2rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ternary-bg, #35362d);
+}
+
+#title {
+  text-align: center;
+  margin: 0;
+  background-color: var(--bg-color, #f7dba7);
+  border: 1px solid var(--border-color, #f1ab86);
+  border-bottom: 0;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
 }

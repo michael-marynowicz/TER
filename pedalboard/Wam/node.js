@@ -135,6 +135,15 @@ export default class PedalBoardNode extends CompositeAudioNode {
   }
 
   /**
+   * Call setState with the initial state passed at the initialisation. It needs to be called inside the gui because
+   * the audio and the gui of the pedalboard are strongly connected.
+   * @author  Quentin Beauchet
+   */
+  async initState() {
+    this.setState(this.initialState);
+  }
+
+  /**
    * Trigger an event to inform the ParamMgrNode of a change in order or an addition/deletion of the nodes in the PedalBoard.
    * @author Quentin Beauchet
    */
