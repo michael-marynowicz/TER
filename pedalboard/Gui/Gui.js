@@ -75,9 +75,15 @@ export default class pedalboardGui extends HTMLElement {
           }
           keywords[k].push(el);
         });
-        return `${pedal.url}${pedal.descriptor.thumbnail}`;
+        return `${wam.url}${wam.descriptor.thumbnail}`;
       })
     );
+
+    let displayArea = document.createElement("details");
+    displayArea.open = true;
+
+    let title = document.createElement("summary");
+    title.innerHTML = "Select filter";
 
     let preview = document.createElement("div");
     preview.id = "preview";
@@ -113,7 +119,10 @@ export default class pedalboardGui extends HTMLElement {
     preview.appendChild(this.images);
 
     refreshImages(select);
-    return preview;
+
+    displayArea.appendChild(title);
+    displayArea.appendChild(preview);
+    return displayArea;
   }
 
   /**
