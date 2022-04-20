@@ -1,9 +1,9 @@
 :root {
-  --border-color: #f1ab86;
-  --text-color: #1e2d2f;
-  --bg-color: #f7dba7;
-  --secondary-bg: #654d3b;
-  --ternary-bg: #35362d;
+  --border-color: gray;
+  --text-color: black;
+  --bg-color: white;
+  --secondary-bg: dimgray;
+  --ternary-bg: black;
 }
 
 main {
@@ -11,9 +11,10 @@ main {
   min-width: 500px;
   resize: horizontal;
   overflow: auto;
-  color: var(--text-color, #1e2d2f);
-  border: 1px solid var(--border-color, #f1ab86);
+  color: var(--text-color, black);
+  border: 1px solid var(--border-color, gray);
   border-radius: 0.25rem;
+  font-family: "helvetica", sans-serif, cursive;
 }
 
 img {
@@ -21,10 +22,10 @@ img {
 }
 
 #preview {
-  border: 1px solid var(--border-color, #f1ab86);
-  border-bottom: 0;
+  border: 1px solid var(--border-color, gray);
+  border-width: 0 1px 0 1px;
   padding: 0.5em;
-  background-color: var(--bg-color, #f7dba7);
+  background-color: var(--bg-color, white);
   overflow-x: auto;
 }
 
@@ -42,11 +43,11 @@ img {
   padding: 1rem;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid var(--border-color, #f1ab86);
+  border: 1px solid var(--border-color, gray);
   border-width: 0 1px 1px 0;
-  background: var(--bg-color, #f7dba7);
-  background-image: linear-gradient(var(--border-color, #f1ab86) 0.01rem, transparent 0.1em),
-    linear-gradient(90deg, var(--border-color, #f1ab86) 0.01rem, transparent 0.1em);
+  background: var(--bg-color, white);
+  background-image: linear-gradient(var(--border-color, gray) 0.01rem, transparent 0.1em),
+    linear-gradient(90deg, var(--border-color, gray) 0.01rem, transparent 0.1em);
   background-size: 3em 3em;
 }
 
@@ -58,11 +59,11 @@ img {
 #presetsInfos {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--border-color, #f1ab86);
-  border-top: 0;
+  border: 1px solid var(--border-color, gray);
+  border-width: 0 1px 0 1px;
   border-bottom-left-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
-  background-color: var(--bg-color, #f7dba7);
+  background-color: var(--bg-color, white);
   margin: 0;
 }
 
@@ -70,7 +71,7 @@ img {
 #presets,
 #infos,
 #presetsInfos > h1 {
-  border-right: 1px solid var(--border-color, #f1ab86);
+  border-right: 1px solid var(--border-color, gray);
   margin: 0;
 }
 
@@ -122,12 +123,12 @@ li {
 }
 
 .addBtn {
-  background-color: var(--bg-color, #f7dba7);
-  border: 1px solid var(--border-color, #f1ab86);
+  background-color: var(--bg-color, white);
+  border: 1px solid var(--border-color, gray);
   border-radius: 0.25rem;
   text-align: center;
   font-size: 1rem;
-  color: var(--text-color, #1e2d2f);
+  color: var(--text-color, black);
 }
 
 .addBtn:hover {
@@ -135,8 +136,8 @@ li {
 }
 
 select {
-  background-color: var(--bg-color, #f7dba7);
-  border: 1px solid var(--border-color, #f1ab86);
+  background-color: var(--bg-color, white);
+  border: 1px solid var(--border-color, gray);
   width: 100%;
   text-align: center;
   font-size: 1rem;
@@ -146,8 +147,8 @@ select {
 }
 
 input {
-  background-color: var(--bg-color, #f7dba7);
-  border-color: var(--border-color, #f1ab86);
+  background-color: var(--bg-color, white);
+  border-color: var(--border-color, gray);
 }
 
 .presetElement,
@@ -193,7 +194,7 @@ input {
 #dropZone {
   display: inline-block;
   align-self: center;
-  border: 5px dashed var(--border-color, #f1ab86);
+  border: 5px dashed var(--border-color, gray);
   width: 100px;
   height: 220px;
 }
@@ -204,36 +205,44 @@ input {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-color, #f7dba7);
+  background: var(--bg-color, white);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--secondary-bg, #654d3b);
+  background: var(--secondary-bg, dimgray);
   border-radius: 2rem;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--ternary-bg, #35362d);
+  background: var(--ternary-bg, black);
 }
 
 #title {
   text-align: center;
   margin: 0;
-  background-color: var(--bg-color, #f7dba7);
-  border: 1px solid var(--border-color, #f1ab86);
-  border-bottom: 0;
+  background-color: var(--bg-color, white);
+  border: 1px solid var(--border-color, gray);
   border-top-left-radius: 0.25rem;
   border-top-right-radius: 0.25rem;
 }
 
-#collapsePresets {
-  background-color: var(--bg-color, #f7dba7);
-  border: 1px solid var(--border-color, #f1ab86);
+details {
+  background-color: var(--bg-color, white);
+  border: 0;
 }
 
-#collapsePresets > summary {
-  border: 1px solid var(--border-color, #f1ab86);
-  border-width: 0 1px 1px 1px;
+details > summary {
+  border: 1px solid var(--border-color, gray);
+  border-width: 0 1px 0 1px;
   user-select: none;
   text-align: center;
+}
+
+details[open] > summary {
+  border-width: 0 1px 1px 1px;
+}
+
+details:last-child {
+  border: 1px solid var(--border-color, gray);
+  border-width: 0 0 1px 0;
 }

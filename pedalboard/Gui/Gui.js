@@ -14,7 +14,6 @@ export default class pedalboardGui extends HTMLElement {
   _editSVGUrl = `${this._baseURL}/assets/editButton.svg`;
   _deleteSVGUrl = `${this._baseURL}/assets/deleteButton.svg`;
   _crossIMGUrl = `${this._baseURL}/assets/cross.png`;
-  _notFoundIMGUrl = `${this._baseURL}/assets/notfound.jpg`;
 
   constructor(plug) {
     super();
@@ -76,11 +75,7 @@ export default class pedalboardGui extends HTMLElement {
           }
           keywords[k].push(el);
         });
-        let thumbnail = wam.descriptor.thumbnail;
-        if (thumbnail == "") {
-          return this._notFoundIMGUrl;
-        }
-        return `${wam.url}${thumbnail}`;
+        return `${pedal.url}${pedal.descriptor.thumbnail}`;
       })
     );
 
