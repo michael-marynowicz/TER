@@ -635,4 +635,4 @@ export default class pedalboardGui extends HTMLElement {
   }
 }
 
-customElements.define("wam3-pedalboard", pedalboardGui);
+customElements.define("wam2-pedalboard", pedalboardGui);
