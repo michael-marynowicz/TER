@@ -140,7 +140,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * @author  Quentin Beauchet
    */
   async initState() {
-    this.setState(this.initialState);
+    await this.setState(this.initialState);
   }
 
   /**
