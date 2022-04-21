@@ -8,7 +8,10 @@ import { createElement } from "./Gui/index.js";
  * @returns {string}
  */
 const getBasetUrl = (relativeURL) => {
-  const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
+  const baseURL = relativeURL.href.substring(
+    0,
+    relativeURL.href.lastIndexOf("/")
+  );
   return baseURL;
 };
 
@@ -68,18 +71,36 @@ export default class PedalBoardPlugin extends WebAudioModule {
    * @author Quentin Beauchet
    */
   async fetchServers() {
-    const filterFetch = (el) => el.status == "fulfilled" && el.value.status == 200;
+    const filterFetch = (el) =>
+      el.status == "fulfilled" && el.value.status == 200;
 
     let repos = await fetch(`${this._baseURL}/repositories.json`);
     let json2 = await repos.json();
-    let files = await Promise.allSettled(json2.map((el) => fetch(this.removeRelativeUrl(el))));
-    let urls = await Promise.all(files.filter(filterFetch).map((el) => el.value.json()));
+    let files = await Promise.allSettled(
+      json2.map((el) => fetch(this.removeRelativeUrl(el)))
+    );
+    let urls = await Promise.all(
+      files.filter(filterFetch).map((el) => el.value.json())
+    );
     urls = urls.reduce((arr, next) => arr.concat(next), []);
 
-    let responses = await Promise.allSettled(urls.map((el) => fetch(`${el}descriptor.json`)));
+    console.log(urls);
 
-    let descriptors = await Promise.all(responses.filter(filterFetch).map((el) => el.value.json()));
-    let modules = await Promise.allSettled(urls.map((el) => import(`${el}index.js`)));
+    let responses = await Promise.allSettled(
+      urls.map((el) => fetch(`${el}descriptor.json`))
+    );
+
+    console.log(responses);
+
+    let descriptors = await Promise.all(
+      responses.filter(filterFetch).map((el) => el.value.json())
+    );
+
+    console.log(descriptors);
+    let modules = await Promise.allSettled(
+      urls.map((el) => import(`${el}index.js`))
+    );
+    console.log(modules);
 
     this.WAMS = {};
     descriptors.forEach((el, index) => {
@@ -110,7 +131,10 @@ export default class PedalBoardPlugin extends WebAudioModule {
    */
   async addWAM(WamName, state) {
     const { default: WAM } = this.WAMS[WamName].module;
-    let instance = await WAM.createInstance(this.pedalboardNode.module._groupId, this.pedalboardNode.context);
+    let instance = await WAM.createInstance(
+      this.pedalboardNode.module._groupId,
+      this.pedalboardNode.context
+    );
     if (state) {
       instance.audioNode.setState(state);
     }
