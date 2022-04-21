@@ -3,7 +3,10 @@
  * @returns {string}
  */
 const getBasetUrl = (relativeURL) => {
-  const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
+  const baseURL = relativeURL.href.substring(
+    0,
+    relativeURL.href.lastIndexOf("/")
+  );
   return baseURL;
 };
 
@@ -36,17 +39,14 @@ export default class pedalboardGui extends HTMLElement {
     this.setStyle();
     this.main = document.createElement("main");
 
-    this.preview = await this.loadThumbnails();
-    this.createBoard();
-    this._plug.pedalboardNode.initState();
-
     var title = document.createElement("h1");
     title.innerHTML = "WAM2 Pedalboard";
     title.id = "title";
 
     this.main.appendChild(title);
-    this.main.appendChild(this.preview);
-    this.main.appendChild(this.board);
+    await this.loadThumbnails();
+    this.createBoard();
+    await this._plug.pedalboardNode.initState();
 
     var body = document.createElement("body");
     body.appendChild(this.main);
@@ -59,7 +59,6 @@ export default class pedalboardGui extends HTMLElement {
    * keywords in their respective descriptor.json and for each image it had an event listener
    * to add the plugin to the board when clicked.
    * It needs to be asynchonous to be consistant each time in the order of the loaded plugins.
-   * @returns The thumbail section.
    * @author Quentin Beauchet
    */
   async loadThumbnails() {
@@ -79,11 +78,11 @@ export default class pedalboardGui extends HTMLElement {
       })
     );
 
-    let displayArea = document.createElement("details");
-    displayArea.open = true;
+    let details = document.createElement("details");
+    details.open = true;
 
-    let title = document.createElement("summary");
-    title.innerHTML = "Select filter";
+    let summary = document.createElement("summary");
+    summary.innerHTML = "Select filter";
 
     let preview = document.createElement("div");
     preview.id = "preview";
@@ -120,9 +119,9 @@ export default class pedalboardGui extends HTMLElement {
 
     refreshImages(select);
 
-    displayArea.appendChild(title);
-    displayArea.appendChild(preview);
-    return displayArea;
+    details.appendChild(summary);
+    details.appendChild(preview);
+    this.main.appendChild(details);
   }
 
   /**
@@ -136,16 +135,16 @@ export default class pedalboardGui extends HTMLElement {
     if (this.presetsMenu) this.presetsMenu.remove();
     this.presetsMenu = await this.loadMenu();
 
-    var collapse = document.createElement("details");
-    collapse.open = true;
-    collapse.id = "collapsePresets";
-    var title = document.createElement("summary");
-    title.innerHTML = "Presets Menu";
+    var details = document.createElement("details");
+    details.open = true;
+    details.id = "collapsePresets";
+    var summary = document.createElement("summary");
+    summary.innerHTML = "Presets Menu";
 
-    collapse.appendChild(title);
-    collapse.appendChild(this.presetsMenu);
+    details.appendChild(summary);
+    details.appendChild(this.presetsMenu);
 
-    this.main.appendChild(collapse);
+    this.main.appendChild(details);
   }
 
   /**
@@ -169,7 +168,7 @@ export default class pedalboardGui extends HTMLElement {
       this._plug.pedalboardNode.connectNodes(this.board.childNodes);
     };
 
-    return this.board;
+    this.main.appendChild(this.board);
   }
 
   /**
@@ -190,9 +189,14 @@ export default class pedalboardGui extends HTMLElement {
       };
       wrapper.ondragover = (event) => {
         let target = this.getWrapper(event.path);
-        let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
+        let mid =
+          target.getBoundingClientRect().x +
+          target.getBoundingClientRect().width / 2;
         if (target) {
-          this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
+          this.board.insertBefore(
+            this.dropZone,
+            mid > event.x ? target : target.nextSibling
+          );
         }
       };
       wrapper.ondragend = () => {
@@ -220,8 +224,14 @@ export default class pedalboardGui extends HTMLElement {
       wrapper.classList.add("nodeArticle");
 
       this.board.appendChild(wrapper);
-      this.resizeWrapper(wrapper, header, title, cross, gui);
-      wrapper.insertBefore(header, gui);
+
+      // We need to do this because the HTMLElement is not fully loaded and the BoundingClientRect returns falsy values.
+      wrapper.hidden = true;
+      setTimeout(() => {
+        wrapper.hidden = false;
+        this.resizeWrapper(wrapper, header, title, cross, gui);
+        wrapper.insertBefore(header, gui);
+      }, 10);
     });
   }
 
@@ -235,22 +245,23 @@ export default class pedalboardGui extends HTMLElement {
    * @author Quentin Beauchet
    */
   resizeWrapper(wrapper, header, title, cross, gui) {
-    const scale = 200 / gui.getBoundingClientRect().height;
+    const parentScale = this.getBoundingClientRect().width / this.offsetWidth;
+    const scale = (200 / gui.getBoundingClientRect().height) * parentScale;
 
     wrapper.style.transformOrigin = "top left";
     wrapper.style.transform = "scale(" + scale + ")";
 
     const width = Math.round(wrapper.getBoundingClientRect().width / scale);
-    const height = Math.round(wrapper.getBoundingClientRect().height / scale);
 
-    wrapper.style.width = `${wrapper.getBoundingClientRect().width}px`;
-    wrapper.style.height = `${wrapper.getBoundingClientRect().height}px`;
-
-    gui.style.width = `${width}px`;
-    gui.style.height = `${height}px`;
+    wrapper.style.width = `${
+      wrapper.getBoundingClientRect().width / parentScale
+    }px`;
+    wrapper.style.height = `${
+      wrapper.getBoundingClientRect().height / parentScale
+    }px`;
 
     header.style.height = `${Math.round(30 / scale)}px`;
-    header.style.width = `${width}px`;
+    header.style.width = `${Math.round(width / parentScale)}px`;
     header.style.borderWidth = `${Math.round(2 / scale)}px`;
 
     title.style.fontSize = `${100 / scale}%`;
@@ -266,7 +277,7 @@ export default class pedalboardGui extends HTMLElement {
   getWrapper(path) {
     let pre;
     for (let e of path) {
-      if (e.id == "board") {
+      if (e == this.board) {
         return pre;
       }
       pre = e;
@@ -357,7 +368,9 @@ export default class pedalboardGui extends HTMLElement {
     this.presets.appendChild(button);
 
     Object.keys(this.PresetsBank[bank]).forEach((preset) => {
-      this.presets.appendChild(this.createPresetElement(bankNameCallBack, preset));
+      this.presets.appendChild(
+        this.createPresetElement(bankNameCallBack, preset)
+      );
     });
   }
 
@@ -476,7 +489,8 @@ export default class pedalboardGui extends HTMLElement {
 
     let text = document.createElement("span");
     text.innerHTML = presetName;
-    const clickEventCallBack = () => this.displayPreset(bankNameCallBack, text.innerHTML);
+    const clickEventCallBack = () =>
+      this.displayPreset(bankNameCallBack, text.innerHTML);
     text.addEventListener("click", clickEventCallBack);
     el.append(text);
 
@@ -497,7 +511,9 @@ export default class pedalboardGui extends HTMLElement {
       this.createLiButton(this._saveSVGUrl, "SAVE", () => {
         this._plug.pedalboardNode
           .getState(this.board.childNodes)
-          .then((state) => (this.PresetsBank[bank][text.innerHTML] = state.current));
+          .then(
+            (state) => (this.PresetsBank[bank][text.innerHTML] = state.current)
+          );
       })
     );
 
@@ -562,7 +578,11 @@ export default class pedalboardGui extends HTMLElement {
       })
     );
 
-    el.append(this.createLiButton(this._deleteSVGUrl, "DELETE", () => this.deleteBank(() => text.innerHTML, el)));
+    el.append(
+      this.createLiButton(this._deleteSVGUrl, "DELETE", () =>
+        this.deleteBank(() => text.innerHTML, el)
+      )
+    );
 
     return el;
   }
@@ -589,8 +609,11 @@ export default class pedalboardGui extends HTMLElement {
    * Return DataWidth and DataHeight values.
    */
   get properties() {
-    const bbox = this.getBoundingClientRect();
-    return { dataWidth: { value: bbox.width }, dataHeight: { value: bbox.height } };
+    const bbox = this.body.getBoundingClientRect();
+    return {
+      dataWidth: { value: bbox.width },
+      dataHeight: { value: bbox.height },
+    };
   }
 
   /**
@@ -598,6 +621,8 @@ export default class pedalboardGui extends HTMLElement {
    * @author Quentin Beauchet
    */
   setStyle() {
+    this.style.display = "block";
+
     var head = document.createElement("head");
 
     var style = document.createElement("link");
@@ -610,4 +635,4 @@ export default class pedalboardGui extends HTMLElement {
   }
 }
 
-customElements.define("wam2-pedalboard", pedalboardGui);
+customElements.define("wam3-pedalboard", pedalboardGui);
