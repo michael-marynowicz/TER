@@ -6,6 +6,11 @@
   --ternary-bg: black;
 }
 
+body {
+  width: min-content;
+  margin: 0;
+}
+
 main {
   width: 1000px;
   min-width: 500px;
@@ -227,7 +232,7 @@ input {
 }
 
 details {
-  background-color: var(--bg-color, white);
+  background-color: var(--bg-color, WhiteSmoke);
   border: 0;
 }
 
