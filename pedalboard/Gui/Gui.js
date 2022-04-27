@@ -3,10 +3,7 @@
  * @returns {string}
  */
 const getBasetUrl = (relativeURL) => {
-  const baseURL = relativeURL.href.substring(
-    0,
-    relativeURL.href.lastIndexOf("/")
-  );
+  const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
   return baseURL;
 };
 
@@ -166,6 +163,8 @@ export default class pedalboardGui extends HTMLElement {
       this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
       this.board.insertBefore(this.dragOrigin, target);
       this._plug.pedalboardNode.connectNodes(this.board.childNodes);
+
+      this.dragOrigin = undefined;
     };
 
     this.main.appendChild(this.board);
@@ -189,14 +188,9 @@ export default class pedalboardGui extends HTMLElement {
       };
       wrapper.ondragover = (event) => {
         let target = this.getWrapper(event.path);
-        let mid =
-          target.getBoundingClientRect().x +
-          target.getBoundingClientRect().width / 2;
-        if (target) {
-          this.board.insertBefore(
-            this.dropZone,
-            mid > event.x ? target : target.nextSibling
-          );
+        let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
+        if (target && this.dragOrigin) {
+          this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
         }
       };
       wrapper.ondragend = () => {
@@ -253,12 +247,8 @@ export default class pedalboardGui extends HTMLElement {
 
     const width = Math.round(wrapper.getBoundingClientRect().width / scale);
 
-    wrapper.style.width = `${
-      wrapper.getBoundingClientRect().width / parentScale
-    }px`;
-    wrapper.style.height = `${
-      wrapper.getBoundingClientRect().height / parentScale
-    }px`;
+    wrapper.style.width = `${wrapper.getBoundingClientRect().width / parentScale}px`;
+    wrapper.style.height = `${wrapper.getBoundingClientRect().height / parentScale}px`;
 
     header.style.height = `${Math.round(30 / scale)}px`;
     header.style.width = `${Math.round(width / parentScale)}px`;
@@ -368,9 +358,7 @@ export default class pedalboardGui extends HTMLElement {
     this.presets.appendChild(button);
 
     Object.keys(this.PresetsBank[bank]).forEach((preset) => {
-      this.presets.appendChild(
-        this.createPresetElement(bankNameCallBack, preset)
-      );
+      this.presets.appendChild(this.createPresetElement(bankNameCallBack, preset));
     });
   }
 
@@ -489,8 +477,7 @@ export default class pedalboardGui extends HTMLElement {
 
     let text = document.createElement("span");
     text.innerHTML = presetName;
-    const clickEventCallBack = () =>
-      this.displayPreset(bankNameCallBack, text.innerHTML);
+    const clickEventCallBack = () => this.displayPreset(bankNameCallBack, text.innerHTML);
     text.addEventListener("click", clickEventCallBack);
     el.append(text);
 
@@ -511,9 +498,7 @@ export default class pedalboardGui extends HTMLElement {
       this.createLiButton(this._saveSVGUrl, "SAVE", () => {
         this._plug.pedalboardNode
           .getState(this.board.childNodes)
-          .then(
-            (state) => (this.PresetsBank[bank][text.innerHTML] = state.current)
-          );
+          .then((state) => (this.PresetsBank[bank][text.innerHTML] = state.current));
       })
     );
 
@@ -578,11 +563,7 @@ export default class pedalboardGui extends HTMLElement {
       })
     );
 
-    el.append(
-      this.createLiButton(this._deleteSVGUrl, "DELETE", () =>
-        this.deleteBank(() => text.innerHTML, el)
-      )
-    );
+    el.append(this.createLiButton(this._deleteSVGUrl, "DELETE", () => this.deleteBank(() => text.innerHTML, el)));
 
     return el;
   }
