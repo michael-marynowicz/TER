@@ -1,58 +1,40 @@
 :root {
-  --border-color: gray;
-  --text-color: black;
-  --bg-color: white;
+  --border-color: #31353A;
+  --text-color: white;
+  --bg-color: #151718;
   --secondary-bg: dimgray;
   --ternary-bg: black;
 }
 
 body {
-  width: min-content;
   margin: 0;
 }
 
 main {
-  width: 1000px;
-  min-width: 500px;
-  resize: horizontal;
-  overflow: auto;
-  color: var(--text-color, black);
-  border: 1px solid var(--border-color, gray);
-  border-radius: 0.25rem;
+  display: flex;
+  color: var(--text-color, white);
   font-family: "helvetica", sans-serif, cursive;
+  height: auto;
+  border: 1px solid var(--border-color, #31353A);
+  border-radius: 0.25rem;
 }
 
 img {
-  max-height: 6rem;
-}
-
-#preview {
-  border: 1px solid var(--border-color, gray);
-  border-width: 0 1px 0 1px;
-  padding: 0.5em;
-  background-color: var(--bg-color, white);
-  overflow-x: auto;
-}
-
-#preview > div {
-  display: flex;
-  overflow-x: auto;
-  border-bottom: 0;
+  max-width: 100%;
+  max-height: 8rem;
 }
 
 #board {
   display: flex;
   align-items: flex-start;
+  flex-grow: 1;
   gap: 0.5rem;
-  height: 230px;
   padding: 1rem;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid var(--border-color, gray);
-  border-width: 0 1px 1px 0;
-  background: var(--bg-color, white);
-  background-image: linear-gradient(var(--border-color, gray) 0.01rem, transparent 0.1em),
-    linear-gradient(90deg, var(--border-color, gray) 0.01rem, transparent 0.1em);
+  background: var(--bg-color, #151718);
+  background-image: linear-gradient(var(--border-color, #31353A) 0.01rem, transparent 0.1em),
+    linear-gradient(90deg, var(--border-color, #31353A) 0.01rem, transparent 0.1em);
   background-size: 3em 3em;
 }
 
@@ -64,39 +46,38 @@ img {
 #presetsInfos {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--border-color, gray);
-  border-width: 0 1px 0 1px;
-  border-bottom-left-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
-  background-color: var(--bg-color, white);
+  grid-template-rows: 3rem 1fr;
+  background-color: var(--bg-color, #151718);
   margin: 0;
+  width: 30%;
 }
 
 #banks,
 #presets,
 #infos,
-#presetsInfos > h1 {
-  border-right: 1px solid var(--border-color, gray);
+.title {
   margin: 0;
-}
-
-#infos,
-#presetsInfos > h1:last-of-type {
-  border-right: none;
+  border: 1px solid var(--border-color, #31353A);
 }
 
 #banks,
 #presets,
 #infos {
-  border-top: none;
-  padding-bottom: 0.5rem;
-  max-height: 5em;
+  padding: 0 1rem 0.5rem 1rem;
   overflow-y: auto;
 }
 
-#presetsInfos > h1 {
-  border-bottom: none;
-  text-align: center;
+#banks,
+#presets {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 li {
@@ -128,12 +109,13 @@ li {
 }
 
 .addBtn {
-  background-color: var(--bg-color, white);
-  border: 1px solid var(--border-color, gray);
+  background-color: var(--bg-color, gray);
+  border: 1px solid var(--border-color, #31353A);
   border-radius: 0.25rem;
   text-align: center;
   font-size: 1rem;
-  color: var(--text-color, black);
+  color: var(--text-color, white);
+  margin: 1rem 0 1rem 0;
 }
 
 .addBtn:hover {
@@ -141,8 +123,9 @@ li {
 }
 
 select {
-  background-color: var(--bg-color, white);
-  border: 1px solid var(--border-color, gray);
+  background-color: var(--bg-color, #151718);
+  border: 1px solid var(--border-color, #31353A);
+  color: white;
   width: 100%;
   text-align: center;
   font-size: 1rem;
@@ -152,8 +135,9 @@ select {
 }
 
 input {
-  background-color: var(--bg-color, white);
-  border-color: var(--border-color, gray);
+  background-color: var(--bg-color, #151718);
+  border-color: var(--border-color, #31353A);
+  color: white;
 }
 
 .presetElement,
@@ -177,7 +161,6 @@ input {
   border: none;
   width: 1rem;
   height: 1rem;
-  margin-right: 0.5rem;
   user-select: none;
 }
 
@@ -199,7 +182,7 @@ input {
 #dropZone {
   display: inline-block;
   align-self: center;
-  border: 5px dashed var(--border-color, gray);
+  border: 5px dashed var(--border-color, #31353A);
   width: 100px;
   height: 220px;
 }
@@ -210,7 +193,7 @@ input {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-color, white);
+  background: var(--bg-color, #151718);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -219,35 +202,27 @@ input {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--ternary-bg, black);
+  background: white;
 }
 
-#title {
-  text-align: center;
-  margin: 0;
-  background-color: var(--bg-color, white);
-  border: 1px solid var(--border-color, gray);
-  border-top-left-radius: 0.25rem;
-  border-top-right-radius: 0.25rem;
+section {
+  background-color: var(--bg-color, #151718);
+  flex-shrink: 0;
+  width: 10%;
 }
 
-details {
-  background-color: var(--bg-color, WhiteSmoke);
-  border: 0;
+#preview {
+  display: flex;
+  flex-direction: column;
 }
 
-details > summary {
-  border: 1px solid var(--border-color, gray);
-  border-width: 0 1px 0 1px;
-  user-select: none;
-  text-align: center;
-}
-
-details[open] > summary {
-  border-width: 0 1px 1px 1px;
-}
-
-details:last-child {
-  border: 1px solid var(--border-color, gray);
-  border-width: 0 0 1px 0;
+#preview > div {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  overflow: auto;
+  height: auto;
+  flex-grow: 1;
 }

@@ -3,7 +3,10 @@
  * @returns {string}
  */
 const getBasetUrl = (relativeURL) => {
-  const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
+  const baseURL = relativeURL.href.substring(
+    0,
+    relativeURL.href.lastIndexOf("/")
+  );
   return baseURL;
 };
 
@@ -36,11 +39,6 @@ export default class pedalboardGui extends HTMLElement {
     this.setStyle();
     this.main = document.createElement("main");
 
-    var title = document.createElement("h1");
-    title.innerHTML = "WAM2 Pedalboard";
-    title.id = "title";
-
-    this.main.appendChild(title);
     await this.loadThumbnails();
     this.createBoard();
     await this._plug.pedalboardNode.initState();
@@ -75,14 +73,8 @@ export default class pedalboardGui extends HTMLElement {
       })
     );
 
-    let details = document.createElement("details");
-    details.open = true;
-
-    let summary = document.createElement("summary");
-    summary.innerHTML = "Select filter";
-
-    let preview = document.createElement("div");
-    preview.id = "preview";
+    let section = document.createElement("section");
+    section.id = "preview";
 
     let select = document.createElement("select");
     const refreshImages = (select) => {
@@ -100,7 +92,7 @@ export default class pedalboardGui extends HTMLElement {
       filter.innerHTML = `${index == 0 ? "Filter: " : ""}${key}`;
       select.appendChild(filter);
     });
-    preview.appendChild(select);
+    section.appendChild(select);
 
     this.images = document.createElement("div");
     urls.forEach((el, index) => {
@@ -112,13 +104,11 @@ export default class pedalboardGui extends HTMLElement {
       });
       this._plug.WAMS[wams[index]].img = img;
     });
-    preview.appendChild(this.images);
+    section.appendChild(this.images);
 
     refreshImages(select);
 
-    details.appendChild(summary);
-    details.appendChild(preview);
-    this.main.appendChild(details);
+    this.main.appendChild(section);
   }
 
   /**
@@ -132,16 +122,7 @@ export default class pedalboardGui extends HTMLElement {
     if (this.presetsMenu) this.presetsMenu.remove();
     this.presetsMenu = await this.loadMenu();
 
-    var details = document.createElement("details");
-    details.open = true;
-    details.id = "collapsePresets";
-    var summary = document.createElement("summary");
-    summary.innerHTML = "Presets Menu";
-
-    details.appendChild(summary);
-    details.appendChild(this.presetsMenu);
-
-    this.main.appendChild(details);
+    this.main.appendChild(this.presetsMenu);
   }
 
   /**
@@ -188,9 +169,14 @@ export default class pedalboardGui extends HTMLElement {
       };
       wrapper.ondragover = (event) => {
         let target = this.getWrapper(event.path);
-        let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
+        let mid =
+          target.getBoundingClientRect().x +
+          target.getBoundingClientRect().width / 2;
         if (target && this.dragOrigin) {
-          this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
+          this.board.insertBefore(
+            this.dropZone,
+            mid > event.x ? target : target.nextSibling
+          );
         }
       };
       wrapper.ondragend = () => {
@@ -247,8 +233,12 @@ export default class pedalboardGui extends HTMLElement {
 
     const width = Math.round(wrapper.getBoundingClientRect().width / scale);
 
-    wrapper.style.width = `${wrapper.getBoundingClientRect().width / parentScale}px`;
-    wrapper.style.height = `${wrapper.getBoundingClientRect().height / parentScale}px`;
+    wrapper.style.width = `${
+      wrapper.getBoundingClientRect().width / parentScale
+    }px`;
+    wrapper.style.height = `${
+      wrapper.getBoundingClientRect().height / parentScale
+    }px`;
 
     header.style.height = `${Math.round(30 / scale)}px`;
     header.style.width = `${Math.round(width / parentScale)}px`;
@@ -282,7 +272,7 @@ export default class pedalboardGui extends HTMLElement {
   async loadMenu() {
     let keys = Object.keys(this.PresetsBank);
 
-    let menu = document.createElement("div");
+    let menu = document.createElement("section");
     menu.id = "presetsInfos";
 
     this.banks = this.createBanks(keys);
@@ -294,12 +284,15 @@ export default class pedalboardGui extends HTMLElement {
     this.infos = document.createElement("div");
     this.infos.id = "infos";
 
-    let banks = document.createElement("h1");
-    banks.innerHTML = "Banks";
-    let presetsTitle = document.createElement("h1");
-    presetsTitle.innerHTML = "Presets";
-    let infosTitle = document.createElement("h1");
-    infosTitle.innerHTML = "Information";
+    let banks = document.createElement("div");
+    banks.innerHTML = "<h1>Banks</h1>";
+    banks.classList.add("title");
+    let presetsTitle = document.createElement("div");
+    presetsTitle.innerHTML = "<h1>Presets</h1>";
+    presetsTitle.classList.add("title");
+    let infosTitle = document.createElement("div");
+    infosTitle.innerHTML = "<h1>Information</h1>";
+    infosTitle.classList.add("title");
 
     menu.appendChild(banks);
     menu.appendChild(presetsTitle);
@@ -358,7 +351,9 @@ export default class pedalboardGui extends HTMLElement {
     this.presets.appendChild(button);
 
     Object.keys(this.PresetsBank[bank]).forEach((preset) => {
-      this.presets.appendChild(this.createPresetElement(bankNameCallBack, preset));
+      this.presets.appendChild(
+        this.createPresetElement(bankNameCallBack, preset)
+      );
     });
   }
 
@@ -477,7 +472,8 @@ export default class pedalboardGui extends HTMLElement {
 
     let text = document.createElement("span");
     text.innerHTML = presetName;
-    const clickEventCallBack = () => this.displayPreset(bankNameCallBack, text.innerHTML);
+    const clickEventCallBack = () =>
+      this.displayPreset(bankNameCallBack, text.innerHTML);
     text.addEventListener("click", clickEventCallBack);
     el.append(text);
 
@@ -498,7 +494,9 @@ export default class pedalboardGui extends HTMLElement {
       this.createLiButton(this._saveSVGUrl, "SAVE", () => {
         this._plug.pedalboardNode
           .getState(this.board.childNodes)
-          .then((state) => (this.PresetsBank[bank][text.innerHTML] = state.current));
+          .then(
+            (state) => (this.PresetsBank[bank][text.innerHTML] = state.current)
+          );
       })
     );
 
@@ -563,7 +561,11 @@ export default class pedalboardGui extends HTMLElement {
       })
     );
 
-    el.append(this.createLiButton(this._deleteSVGUrl, "DELETE", () => this.deleteBank(() => text.innerHTML, el)));
+    el.append(
+      this.createLiButton(this._deleteSVGUrl, "DELETE", () =>
+        this.deleteBank(() => text.innerHTML, el)
+      )
+    );
 
     return el;
   }
