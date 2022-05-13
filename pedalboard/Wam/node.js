@@ -30,7 +30,10 @@ export default class PedalBoardNode extends CompositeAudioNode {
   createNodes() {
     this._input = this.context.createGain();
     this.connect(this._input);
-    this._output = this.context.createGain();
+    this._output = this.context.createAnalyser();
+    this._output.minDecibels = -90;
+    this._output.maxDecibels = -10;
+    this._output.smoothingTimeConstant = 0.85;
   }
 
   /**

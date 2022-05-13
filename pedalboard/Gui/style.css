@@ -49,11 +49,6 @@ img {
   overflow-x: auto;
   overflow-y: hidden;
   border: 1px solid var(--border-color, gray);
-  border-width: 0 1px 1px 0;
-  background: var(--bg-color, white);
-  background-image: linear-gradient(var(--border-color, gray) 0.01rem, transparent 0.1em),
-    linear-gradient(90deg, var(--border-color, gray) 0.01rem, transparent 0.1em);
-  background-size: 3em 3em;
 }
 
 #board > * {
@@ -229,6 +224,12 @@ input {
   border: 1px solid var(--border-color, gray);
   border-top-left-radius: 0.25rem;
   border-top-right-radius: 0.25rem;
+  user-select: none;
+}
+
+#title[checked=""] {
+  color: white;
+  background-color: black;
 }
 
 details {
@@ -251,3 +252,26 @@ details:last-child {
   border: 1px solid var(--border-color, gray);
   border-width: 0 0 1px 0;
 }
+
+#boardParent {
+  position: relative;
+  height: calc(230px + 1rem + 1rem);
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: inherit;
+  z-index: -1;
+}
+
+#on_off {
+  width: 100%;
+  background-color: white;
+  height: 3rem;
+  font-size: large;
+}
+
+#on_off: ho;
