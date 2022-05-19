@@ -1,5 +1,5 @@
-import WebAudioModule from "../../plugins/sdk/src/WebAudioModule.js";
-import ParamMgrFactory from "../../plugins/sdk-parammgr/src/ParamMgrFactory.js";
+import WebAudioModule from "../../plugins/utils/sdk/src/WebAudioModule.js";
+import ParamMgrFactory from "../../plugins/utils/sdk-parammgr/src/ParamMgrFactory.js";
 import PedalBoardNode from "./Wam/node.js";
 import { createElement } from "./Gui/index.js";
 

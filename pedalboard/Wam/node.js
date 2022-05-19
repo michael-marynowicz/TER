@@ -1,4 +1,4 @@
-import CompositeAudioNode from "../../../plugins/sdk-parammgr/src/CompositeAudioNode.js";
+import CompositeAudioNode from "../../../plugins/utils/sdk-parammgr/src/CompositeAudioNode.js";
 
 export default class PedalBoardNode extends CompositeAudioNode {
   /**
