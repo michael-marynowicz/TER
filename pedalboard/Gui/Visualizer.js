@@ -27,8 +27,6 @@ export default class Visualizer {
       if (this.width != width || this.height != height) {
         let ratio = this.width / width;
 
-        console.log(ratio, globalRatio);
-
         this.width = width;
         this.height = height;
 
