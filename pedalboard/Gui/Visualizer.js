@@ -12,13 +12,7 @@ export default class Visualizer {
     this.resize();
 
     this.engine.runRenderLoop(() => {
-      analyser.getByteTimeDomainData(this.dataArrayAlt);
-      let width = this.width / this.bufferLengthAlt;
-      for (let i = 0; i < this.bufferLengthAlt; i++) {
-        let height = (128 - this.dataArrayAlt[i]) * 2;
-        this.boxes[i].scaling = new BABYLON.Vector3(width, height, 1);
-        this.boxes[i].position.x = i * width;
-      }
+      //analyser.getByteTimeDomainData(this.dataArrayAlt);
 
       this.scene.render();
     });
@@ -31,8 +25,17 @@ export default class Visualizer {
     this.scene.beforeRender = () => {
       let { width, height } = this.canvas.getBoundingClientRect();
       if (this.width != width || this.height != height) {
+        let ratio = this.width / width;
+
+        console.log(ratio, globalRatio);
+
         this.width = width;
         this.height = height;
+
+        if (ratio != 0) {
+          this.plane.scaling.x /= ratio;
+          this.plane.scaling.y /= ratio;
+        }
 
         this.engine.resize();
       }
@@ -41,33 +44,24 @@ export default class Visualizer {
 
   createScene() {
     var scene = new BABYLON.Scene(this.engine);
-    scene.clearColor = new BABYLON.Color3(1, 1, 1);
 
     var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
-    const color1 = new BABYLON.Color3(0, 0, 1);
-    const color2 = new BABYLON.Color3(1, 0, 0);
+    this.plane = BABYLON.MeshBuilder.CreatePlane(
+      "plane",
+      { width: this.canvas.width, height: this.canvas.height },
+      scene
+    );
+    BABYLON.NodeMaterial.ParseFromFileAsync("shader", "/pedalboard/Gui/assets/material.json", scene).then((e) => {
+      this.plane.material = e;
+    });
 
-    this.boxes = [];
-    for (let i = 0; i < this.bufferLengthAlt; i++) {
-      let box = new BABYLON.MeshBuilder.CreateBox(`${i}`);
-      /*
-      box.enableEdgesRendering();
-      box.edgesWidth = 10.0;
-      box.edgesColor = new BABYLON.Color4(0, 0, 0, 1);*/
-
-      const mat = new BABYLON.StandardMaterial("mat" + i, scene);
-      mat.diffuseColor = BABYLON.Color3.Lerp(color1, color2, i / (this.bufferLengthAlt - 1));
-      box.material = mat;
-
-      this.boxes.push(box);
-    }
-
-    this.camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3.Zero(), scene);
-    this.camera.lockedTarget = this.boxes[this.bufferLengthAlt / 2];
-    this.camera.radius = 305;
+    this.camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
+    this.camera.radius = this.canvas.width;
 
     return scene;
   }
+
+  map = (value, x1, y1, x2, y2) => ((value - x1) * (y2 - x2)) / (y1 - x1) + x2;
 }
