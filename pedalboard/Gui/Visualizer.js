@@ -1,4 +1,16 @@
+import "https://preview.babylonjs.com/babylon.js";
+
+/**
+ * @param {URL} relativeURL
+ * @returns {string}
+ */
+const getBasetUrl = (relativeURL) => {
+  const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
+  return baseURL;
+};
 export default class Visualizer {
+  _baseURL = getBasetUrl(new URL(".", import.meta.url));
+
   constructor(canvas, analyser) {
     this.canvas = canvas;
     this.engine = new BABYLON.Engine(this.canvas, true);
@@ -12,7 +24,15 @@ export default class Visualizer {
     this.resize();
 
     this.engine.runRenderLoop(() => {
-      //analyser.getByteTimeDomainData(this.dataArrayAlt);
+      analyser.getByteTimeDomainData(this.dataArrayAlt);
+
+      if (this.plane.material) {
+        let arr = Array.from(this.dataArrayAlt);
+        let mean = arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
+        //console.log(this.plane.material.attachedBlocks);
+        let zoom = this.plane.material.attachedBlocks[13];
+        zoom._storedValue = this.map(mean, 0, 256, zoom.min, zoom.max);
+      }
 
       this.scene.render();
     });
@@ -51,7 +71,7 @@ export default class Visualizer {
       { width: this.canvas.width, height: this.canvas.height },
       scene
     );
-    BABYLON.NodeMaterial.ParseFromFileAsync("shader", "/pedalboard/Gui/assets/material.json", scene).then((e) => {
+    BABYLON.NodeMaterial.ParseFromFileAsync("shader", `${this._baseURL}/assets/material.json`, scene).then((e) => {
       this.plane.material = e;
     });
 

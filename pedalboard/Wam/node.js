@@ -30,10 +30,12 @@ export default class PedalBoardNode extends CompositeAudioNode {
   createNodes() {
     this._input = this.context.createGain();
     this.connect(this._input);
-    this._output = this.context.createAnalyser();
-    this._output.minDecibels = -90;
-    this._output.maxDecibels = -10;
-    this._output.smoothingTimeConstant = 0.85;
+    this._output = this.context.createGain();
+
+    this.analyser = this.context.createAnalyser();
+    this.analyser.minDecibels = -90;
+    this.analyser.maxDecibels = -10;
+    this.analyser.smoothingTimeConstant = 0.85;
   }
 
   /**
@@ -55,31 +57,45 @@ export default class PedalBoardNode extends CompositeAudioNode {
 
   /**
    * Disconnects every nodes from the board of the Gui. It then check the nodes stored in this.nodes and
-   * if they aren't needed anymore it delete them from the object. The boolean forced is needed when using setState().
+   * if they aren't needed anymore it delete them from the object.
+   * The callback is used when changing the order of the plugins on the board or when removing a plugin.
+   * The boolean forced is needed when using setState().
    * @param {HTMLCollection} nodes
    * @author Quentin Beauchet
    */
-  disconnectNodes(nodes, forced) {
+  disconnectNodes(nodes, forced, callback) {
     this.lastNode = this._input;
-    var connectedIds = [];
     nodes.forEach((el) => {
       let audioNode = this.nodes[el.id].node;
       this.lastNode.disconnect(audioNode);
       this.lastNode = audioNode;
-      connectedIds.push(el.id);
     });
     this.lastNode.disconnect(this._output);
 
-    if (forced) {
-      this.nodes = {};
-    } else {
-      //Act like a garbage collector
-      Object.keys(this.nodes).forEach((el) => {
-        if (!connectedIds.includes(el)) delete this.nodes[el];
-      });
+    if (callback) {
+      callback();
     }
 
-    this.connectNodes([]);
+    this.cleanup(nodes, forced);
+  }
+
+  /**
+   * Act like a garbage collector, it remove wap that aren't in the board anymore.
+   * @param {HTMLCollection} nodes
+   * @param {boolean} forced remove every wap if true
+   * @author Quentin Beauchet
+   */
+  cleanup(nodes, forced) {
+    if (forced) {
+      this.nodes = {};
+      this.connectNodes([]);
+    } else {
+      let ids = Array.from(nodes).map((el) => el.id);
+      Object.keys(this.nodes).forEach((el) => {
+        if (!ids.includes(el)) delete this.nodes[el];
+      });
+      this.connectNodes(nodes);
+    }
   }
 
   /**

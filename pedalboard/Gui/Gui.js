@@ -175,9 +175,9 @@ export default class pedalboardGui extends HTMLElement {
       let target = this.dropZone.nextSibling;
       this.board.removeChild(this.dropZone);
 
-      this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
-      this.board.insertBefore(this.dragOrigin, target);
-      this._plug.pedalboardNode.connectNodes(this.board.childNodes);
+      this._plug.pedalboardNode.disconnectNodes(this.board.childNodes, false, () =>
+        this.board.insertBefore(this.dragOrigin, target)
+      );
 
       this.dragOrigin = undefined;
     };
@@ -185,7 +185,7 @@ export default class pedalboardGui extends HTMLElement {
 
     this.canvas = document.createElement("canvas");
     boardParent.appendChild(this.canvas);
-    new Visualizer(this.canvas, this._plug.pedalboardNode._output);
+    new Visualizer(this.canvas, this._plug.pedalboardNode.analyser);
 
     this.main.appendChild(boardParent);
   }
@@ -228,9 +228,7 @@ export default class pedalboardGui extends HTMLElement {
       cross.src = this._crossIMGUrl;
       cross.setAttribute("crossorigin", "anonymous");
       cross.addEventListener("click", () => {
-        this._plug.pedalboardNode.disconnectNodes(this.board.childNodes);
-        this.board.removeChild(wrapper);
-        this._plug.pedalboardNode.connectNodes(this.board.childNodes);
+        this._plug.pedalboardNode.disconnectNodes(this.board.childNodes, false, () => this.board.removeChild(wrapper));
       });
       header.append(cross);
       wrapper.appendChild(gui);
