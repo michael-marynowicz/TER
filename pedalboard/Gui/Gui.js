@@ -42,20 +42,14 @@ export default class pedalboardGui extends HTMLElement {
     title.innerHTML = "WAM2 Pedalboard";
     title.id = "title";
 
-    title.addEventListener("click", () => {
-      if (title.getAttribute("checked") == "") {
-        title.removeAttribute("checked");
-        this.board.childNodes.forEach((el) => (el.style.opacity = "1"));
-      } else {
-        title.setAttribute("checked", "");
-        this.board.childNodes.forEach((el) => (el.style.opacity = "0"));
-      }
-    });
-
     this.main.appendChild(title);
     await this.loadThumbnails();
     this.createBoard();
     await this._plug.pedalboardNode.initState();
+
+    let canvas = document.createElement("canvas");
+    this.main.appendChild(canvas);
+    new Visualizer(canvas, this._plug.pedalboardNode.analyser);
 
     var body = document.createElement("body");
     body.appendChild(this.main);
@@ -181,13 +175,8 @@ export default class pedalboardGui extends HTMLElement {
 
       this.dragOrigin = undefined;
     };
-    boardParent.appendChild(this.board);
 
-    this.canvas = document.createElement("canvas");
-    boardParent.appendChild(this.canvas);
-    new Visualizer(this.canvas, this._plug.pedalboardNode.analyser);
-
-    this.main.appendChild(boardParent);
+    this.main.appendChild(this.board);
   }
 
   /**

@@ -19,67 +19,65 @@ export default class Visualizer {
     this.bufferLengthAlt = analyser.frequencyBinCount;
     this.dataArrayAlt = new Uint8Array(this.bufferLengthAlt);
 
-    this.scene = this.createScene();
+    this.createScene();
 
     this.resize();
 
+    let c = 0;
+    let mean;
     this.engine.runRenderLoop(() => {
-      analyser.getByteTimeDomainData(this.dataArrayAlt);
-
-      if (this.plane.material) {
+      if (c % 60 == 0) {
+        analyser.getByteTimeDomainData(this.dataArrayAlt);
         let arr = Array.from(this.dataArrayAlt);
-        let mean = arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
-        //console.log(this.plane.material.attachedBlocks);
-        let zoom = this.plane.material.attachedBlocks[13];
-        zoom._storedValue = this.map(mean, 0, 256, zoom.min, zoom.max);
+        mean = arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
       }
+      c++;
 
+      if (this.plane?.material) {
+        let param = this.plane.material.attachedBlocks[12];
+        param._storedValue = this.lerp(param._storedValue, this.map(mean, 0, 256, param.min, param.max), 0.005);
+      }
       this.scene.render();
     });
   }
 
   resize() {
-    let { width, height } = this.canvas.getBoundingClientRect();
-    this.width = width;
-    this.height = height;
+    let resized = false;
+    new ResizeObserver(() => {
+      resized = true;
+    }).observe(this.canvas);
+
     this.scene.beforeRender = () => {
-      let { width, height } = this.canvas.getBoundingClientRect();
-      if (this.width != width || this.height != height) {
-        let ratio = this.width / width;
-
-        this.width = width;
-        this.height = height;
-
-        if (ratio != 0) {
-          this.plane.scaling.x /= ratio;
-          this.plane.scaling.y /= ratio;
-        }
-
+      if (resized) {
         this.engine.resize();
+        resized = false;
       }
     };
   }
 
   createScene() {
-    var scene = new BABYLON.Scene(this.engine);
+    this.scene = new BABYLON.Scene(this.engine);
+    this.scene.clearColor = new BABYLON.Color3.Black();
 
-    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), this.scene);
     light.intensity = 0.7;
 
-    this.plane = BABYLON.MeshBuilder.CreatePlane(
-      "plane",
-      { width: this.canvas.width, height: this.canvas.height },
-      scene
-    );
-    BABYLON.NodeMaterial.ParseFromFileAsync("shader", `${this._baseURL}/assets/material.json`, scene).then((e) => {
+    this.plane = BABYLON.MeshBuilder.CreatePlane("plane", { height: 10, width: 20 });
+
+    BABYLON.NodeMaterial.ParseFromFileAsync("shader", `${this._baseURL}/assets/material.json`, this.scene).then((e) => {
       this.plane.material = e;
     });
 
-    this.camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
-    this.camera.radius = this.canvas.width;
-
-    return scene;
+    this.camera = new BABYLON.ArcRotateCamera(
+      "Camera",
+      -Math.PI / 2,
+      Math.PI / 2,
+      5,
+      BABYLON.Vector3.Zero(),
+      this.scene
+    );
   }
 
   map = (value, x1, y1, x2, y2) => ((value - x1) * (y2 - x2)) / (y1 - x1) + x2;
+  lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 }

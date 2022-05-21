@@ -36,6 +36,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
     this.analyser.minDecibels = -90;
     this.analyser.maxDecibels = -10;
     this.analyser.smoothingTimeConstant = 0.85;
+    this._output.connect(this.analyser);
   }
 
   /**

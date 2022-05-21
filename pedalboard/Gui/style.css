@@ -12,11 +12,12 @@ body {
 }
 
 main {
+  position: relative;
   width: 1000px;
   min-width: 500px;
   resize: horizontal;
   overflow: auto;
-  color: var(--text-color, black);
+  color: var(--text-color, white);
   border: 1px solid var(--border-color, gray);
   border-radius: 0.25rem;
   font-family: "helvetica", sans-serif, cursive;
@@ -30,7 +31,6 @@ img {
   border: 1px solid var(--border-color, gray);
   border-width: 0 1px 0 1px;
   padding: 0.5em;
-  background-color: var(--bg-color, white);
   overflow-x: auto;
 }
 
@@ -63,7 +63,6 @@ img {
   border-width: 0 1px 0 1px;
   border-bottom-left-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
-  background-color: var(--bg-color, white);
   margin: 0;
 }
 
@@ -123,7 +122,6 @@ li {
 }
 
 .addBtn {
-  background-color: var(--bg-color, white);
   border: 1px solid var(--border-color, gray);
   border-radius: 0.25rem;
   text-align: center;
@@ -136,7 +134,6 @@ li {
 }
 
 select {
-  background-color: var(--bg-color, white);
   border: 1px solid var(--border-color, gray);
   width: 100%;
   text-align: center;
@@ -144,10 +141,16 @@ select {
   border-radius: 0.25rem;
   margin-bottom: 0.25em;
   text-transform: uppercase;
+  background: none;
+  color: white;
+}
+
+option {
+  color: black;
+  background: rgba(1, 1, 1, 0);
 }
 
 input {
-  background-color: var(--bg-color, white);
   border-color: var(--border-color, gray);
 }
 
@@ -205,7 +208,7 @@ input {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-color, white);
+  background: none;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -214,26 +217,19 @@ input {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--ternary-bg, black);
+  background: var(--ternary-bg, white);
 }
 
 #title {
   text-align: center;
   margin: 0;
-  background-color: var(--bg-color, white);
   border: 1px solid var(--border-color, gray);
   border-top-left-radius: 0.25rem;
   border-top-right-radius: 0.25rem;
   user-select: none;
 }
 
-#title[checked=""] {
-  color: white;
-  background-color: black;
-}
-
 details {
-  background-color: var(--bg-color, WhiteSmoke);
   border: 0;
 }
 
@@ -253,23 +249,12 @@ details:last-child {
   border-width: 0 0 1px 0;
 }
 
-#boardParent {
-  position: relative;
-  height: calc(230px + 1rem + 1rem);
-}
-
 canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: inherit;
+  height: 100%;
   z-index: -1;
-}
-
-#on_off {
-  width: 100%;
-  background-color: white;
-  height: 3rem;
-  font-size: large;
+  background-color: black;
 }
