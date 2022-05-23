@@ -48,8 +48,13 @@ export default class pedalboardGui extends HTMLElement {
     await this._plug.pedalboardNode.initState();
 
     let canvas = document.createElement("canvas");
+    canvas.on = true;
     this.main.appendChild(canvas);
     new Visualizer(canvas, this._plug.pedalboardNode.analyser);
+
+    title.addEventListener("click", () => {
+      canvas.on = !canvas.on;
+    });
 
     var body = document.createElement("body");
     body.appendChild(this.main);
@@ -196,7 +201,7 @@ export default class pedalboardGui extends HTMLElement {
         this.dragOrigin = wrapper;
       };
       wrapper.ondragover = (event) => {
-        let target = this.getWrapper(event.path);
+        let target = this.getWrapper(event);
         let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
         if (target && this.dragOrigin) {
           this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
@@ -268,18 +273,26 @@ export default class pedalboardGui extends HTMLElement {
 
   /**
    * Return the nodeArticle when selecting child node instead of itself with drag and drop.
-   * @param {HTMLElement[]} path
+   * @param {HTMLElement[]} event
    * @returns The wrapper selected.
    */
-  getWrapper(path) {
-    let pre;
-    for (let e of path) {
-      if (e == this.board) {
-        return pre;
+  getWrapper(event) {
+    if (event.path) {
+      let pre;
+      for (let e of event.path) {
+        if (e == this.board) {
+          return pre;
+        }
+        pre = e;
       }
-      pre = e;
+      return pre;
+    } else {
+      let pre = this._root.elementFromPoint(event.clientX, event.clientY);
+      while (pre.parentNode != this.board) {
+        pre = pre.parentNode;
+      }
+      return pre;
     }
-    return pre;
   }
 
   /**

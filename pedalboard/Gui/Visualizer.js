@@ -26,18 +26,20 @@ export default class Visualizer {
     let c = 0;
     let mean;
     this.engine.runRenderLoop(() => {
-      if (c % 60 == 0) {
-        analyser.getByteTimeDomainData(this.dataArrayAlt);
-        let arr = Array.from(this.dataArrayAlt);
-        mean = arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
-      }
-      c++;
+      if (this.canvas.on) {
+        if (c % 60 == 0) {
+          analyser.getByteTimeDomainData(this.dataArrayAlt);
+          let arr = Array.from(this.dataArrayAlt);
+          mean = arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
+        }
+        c++;
 
-      if (this.plane?.material) {
-        let param = this.plane.material.attachedBlocks[12];
-        param._storedValue = this.lerp(param._storedValue, this.map(mean, 0, 256, param.min, param.max), 0.005);
+        if (this.plane?.material) {
+          let param = this.plane.material.attachedBlocks[12];
+          param._storedValue = this.lerp(param._storedValue, this.map(mean, 0, 256, param.min, param.max), 0.005);
+        }
+        this.scene.render();
       }
-      this.scene.render();
     });
   }
 
