@@ -277,22 +277,12 @@ export default class pedalboardGui extends HTMLElement {
    * @returns The wrapper selected.
    */
   getWrapper(event) {
-    if (event.path) {
-      let pre;
-      for (let e of event.path) {
-        if (e == this.board) {
-          return pre;
-        }
-        pre = e;
-      }
-      return pre;
-    } else {
-      let pre = this._root.elementFromPoint(event.clientX, event.clientY);
-      while (pre.parentNode != this.board) {
-        pre = pre.parentNode;
-      }
-      return pre;
+    let pre = this._root.elementFromPoint(event.clientX, event.clientY);
+    while (pre.parentNode != this.board) {
+      console.log(pre);
+      pre = pre.parentNode;
     }
+    return pre;
   }
 
   /**
