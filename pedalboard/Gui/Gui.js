@@ -170,7 +170,8 @@ export default class pedalboardGui extends HTMLElement {
     this.dropZone = document.createElement("div");
     this.dropZone.id = "dropZone";
     this.dropZone.ondragover = (e) => e.preventDefault();
-    this.dropZone.ondrop = (event) => {
+    this.dropZone.ondrop = (e) => {
+      e.preventDefault();
       let target = this.dropZone.nextSibling;
       this.board.removeChild(this.dropZone);
 
@@ -179,7 +180,6 @@ export default class pedalboardGui extends HTMLElement {
       );
 
       this.dragOrigin = undefined;
-      event.preventDefault();
     };
 
     this.main.appendChild(this.board);
@@ -209,10 +209,10 @@ export default class pedalboardGui extends HTMLElement {
         }
       };
       wrapper.ondragend = (event) => {
+        event.preventDefault();
         if (this.dropZone.parentElement == this.board) {
           this.board.removeChild(this.dropZone);
         }
-        event.preventDefault();
       };
 
       let header = document.createElement("header");
