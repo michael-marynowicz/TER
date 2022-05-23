@@ -170,7 +170,7 @@ export default class pedalboardGui extends HTMLElement {
     this.dropZone = document.createElement("div");
     this.dropZone.id = "dropZone";
     this.dropZone.ondragover = (e) => e.preventDefault();
-    this.dropZone.ondrop = () => {
+    this.dropZone.ondrop = (event) => {
       let target = this.dropZone.nextSibling;
       this.board.removeChild(this.dropZone);
 
@@ -179,6 +179,7 @@ export default class pedalboardGui extends HTMLElement {
       );
 
       this.dragOrigin = undefined;
+      event.preventDefault();
     };
 
     this.main.appendChild(this.board);
@@ -207,10 +208,11 @@ export default class pedalboardGui extends HTMLElement {
           this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
         }
       };
-      wrapper.ondragend = () => {
+      wrapper.ondragend = (event) => {
         if (this.dropZone.parentElement == this.board) {
           this.board.removeChild(this.dropZone);
         }
+        event.preventDefault();
       };
 
       let header = document.createElement("header");
@@ -278,8 +280,7 @@ export default class pedalboardGui extends HTMLElement {
    */
   getWrapper(event) {
     let pre = this._root.elementFromPoint(event.clientX, event.clientY);
-    while (pre.parentNode != this.board) {
-      console.log(pre);
+    while (pre && pre.parentNode != this.board) {
       pre = pre.parentNode;
     }
     return pre;
