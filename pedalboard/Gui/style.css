@@ -14,7 +14,7 @@ main {
   display: flex;
   color: var(--text-color, white);
   font-family: "helvetica", sans-serif, cursive;
-  height: auto;
+  height: 280px;
   border: 1px solid var(--border-color, #31353A);
   border-radius: 0.25rem;
 }
