@@ -224,7 +224,6 @@ section {
   gap: 3px;
   overflow: auto;
   height: auto;
-  flex-grow: 1;
 }
 
 #presetsCollapsable {
