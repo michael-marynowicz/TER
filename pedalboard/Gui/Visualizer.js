@@ -35,8 +35,9 @@ export default class Visualizer {
         c++;
 
         if (this.plane?.material) {
-          let param = this.plane.material.attachedBlocks[12];
+          let param = this.plane.material.attachedBlocks[11];
           param._storedValue = this.lerp(param._storedValue, this.map(mean, 0, 256, param.min, param.max), 0.005);
+          //param._storedValue =  this.map(mean, 0, 256, param.min, param.max);
         }
         this.scene.render();
       }
