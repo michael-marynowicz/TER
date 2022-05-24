@@ -3,10 +3,7 @@
  * @returns {string}
  */
 const getBasetUrl = (relativeURL) => {
-  const baseURL = relativeURL.href.substring(
-    0,
-    relativeURL.href.lastIndexOf("/")
-  );
+  const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
   return baseURL;
 };
 
@@ -122,7 +119,27 @@ export default class pedalboardGui extends HTMLElement {
     if (this.presetsMenu) this.presetsMenu.remove();
     this.presetsMenu = await this.loadMenu();
 
-    this.main.appendChild(this.presetsMenu);
+    let presetsCollapsable = document.createElement("div");
+    presetsCollapsable.id = "presetsCollapsable";
+
+    let onoff = document.createElement("button");
+    onoff.id = "presetsONOFF";
+    onoff.innerHTML = "❱";
+
+    onoff.onclick = () => {
+      if (presetsCollapsable.getAttribute("collapsed") == "on") {
+        presetsCollapsable.setAttribute("collapsed", "off");
+        onoff.innerHTML = "❱";
+      } else {
+        presetsCollapsable.setAttribute("collapsed", "on");
+        onoff.innerHTML = "❰";
+      }
+    };
+
+    presetsCollapsable.appendChild(onoff);
+    presetsCollapsable.appendChild(this.presetsMenu);
+
+    this.main.appendChild(presetsCollapsable);
   }
 
   /**
@@ -137,7 +154,8 @@ export default class pedalboardGui extends HTMLElement {
     this.dropZone = document.createElement("div");
     this.dropZone.id = "dropZone";
     this.dropZone.ondragover = (e) => e.preventDefault();
-    this.dropZone.ondrop = () => {
+    this.dropZone.ondrop = (e) => {
+      e.preventDefault();
       let target = this.dropZone.nextSibling;
       this.board.removeChild(this.dropZone);
 
@@ -168,18 +186,14 @@ export default class pedalboardGui extends HTMLElement {
         this.dragOrigin = wrapper;
       };
       wrapper.ondragover = (event) => {
-        let target = this.getWrapper(event.path);
-        let mid =
-          target.getBoundingClientRect().x +
-          target.getBoundingClientRect().width / 2;
+        let target = this.getWrapper(event);
+        let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
         if (target && this.dragOrigin) {
-          this.board.insertBefore(
-            this.dropZone,
-            mid > event.x ? target : target.nextSibling
-          );
+          this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
         }
       };
-      wrapper.ondragend = () => {
+      wrapper.ondragend = (event) => {
+        event.preventDefault();
         if (this.dropZone.parentElement == this.board) {
           this.board.removeChild(this.dropZone);
         }
@@ -233,12 +247,8 @@ export default class pedalboardGui extends HTMLElement {
 
     const width = Math.round(wrapper.getBoundingClientRect().width / scale);
 
-    wrapper.style.width = `${
-      wrapper.getBoundingClientRect().width / parentScale
-    }px`;
-    wrapper.style.height = `${
-      wrapper.getBoundingClientRect().height / parentScale
-    }px`;
+    wrapper.style.width = `${wrapper.getBoundingClientRect().width / parentScale}px`;
+    wrapper.style.height = `${wrapper.getBoundingClientRect().height / parentScale}px`;
 
     header.style.height = `${Math.round(30 / scale)}px`;
     header.style.width = `${Math.round(width / parentScale)}px`;
@@ -251,16 +261,13 @@ export default class pedalboardGui extends HTMLElement {
 
   /**
    * Return the nodeArticle when selecting child node instead of itself with drag and drop.
-   * @param {HTMLElement[]} path
+   * @param {Object} event
    * @returns The wrapper selected.
    */
-  getWrapper(path) {
-    let pre;
-    for (let e of path) {
-      if (e == this.board) {
-        return pre;
-      }
-      pre = e;
+  getWrapper(event) {
+    let pre = this._root.elementFromPoint(event.clientX, event.clientY);
+    while (pre && pre.parentNode != this.board) {
+      pre = pre.parentNode;
     }
     return pre;
   }
@@ -351,9 +358,7 @@ export default class pedalboardGui extends HTMLElement {
     this.presets.appendChild(button);
 
     Object.keys(this.PresetsBank[bank]).forEach((preset) => {
-      this.presets.appendChild(
-        this.createPresetElement(bankNameCallBack, preset)
-      );
+      this.presets.appendChild(this.createPresetElement(bankNameCallBack, preset));
     });
   }
 
@@ -472,8 +477,7 @@ export default class pedalboardGui extends HTMLElement {
 
     let text = document.createElement("span");
     text.innerHTML = presetName;
-    const clickEventCallBack = () =>
-      this.displayPreset(bankNameCallBack, text.innerHTML);
+    const clickEventCallBack = () => this.displayPreset(bankNameCallBack, text.innerHTML);
     text.addEventListener("click", clickEventCallBack);
     el.append(text);
 
@@ -494,9 +498,7 @@ export default class pedalboardGui extends HTMLElement {
       this.createLiButton(this._saveSVGUrl, "SAVE", () => {
         this._plug.pedalboardNode
           .getState(this.board.childNodes)
-          .then(
-            (state) => (this.PresetsBank[bank][text.innerHTML] = state.current)
-          );
+          .then((state) => (this.PresetsBank[bank][text.innerHTML] = state.current));
       })
     );
 
@@ -561,11 +563,7 @@ export default class pedalboardGui extends HTMLElement {
       })
     );
 
-    el.append(
-      this.createLiButton(this._deleteSVGUrl, "DELETE", () =>
-        this.deleteBank(() => text.innerHTML, el)
-      )
-    );
+    el.append(this.createLiButton(this._deleteSVGUrl, "DELETE", () => this.deleteBank(() => text.innerHTML, el)));
 
     return el;
   }
