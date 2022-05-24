@@ -229,6 +229,7 @@ section {
 #presetsCollapsable {
   display: flex;
   width: 30%;
+  flex-shrink: 0;
 }
 
 #presetsCollapsable[collapsed="on"] {
