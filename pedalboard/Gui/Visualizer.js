@@ -14,31 +14,20 @@ export default class Visualizer {
   constructor(canvas, analyser) {
     this.canvas = canvas;
     this.engine = new BABYLON.Engine(this.canvas, true);
+    this.analyser = analyser;
 
-    analyser.fftSize = 256;
-    this.bufferLengthAlt = analyser.frequencyBinCount;
+    this.analyser.fftSize = 4096;
+    this.bufferLengthAlt = this.analyser.frequencyBinCount;
     this.dataArrayAlt = new Uint8Array(this.bufferLengthAlt);
 
     this.createScene();
+    this.initShader();
 
     this.resize();
 
-    let c = 0;
-    let mean;
     this.engine.runRenderLoop(() => {
       if (this.canvas.on) {
-        if (c % 60 == 0) {
-          analyser.getByteTimeDomainData(this.dataArrayAlt);
-          let arr = Array.from(this.dataArrayAlt);
-          mean = arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
-        }
-        c++;
-
-        if (this.plane?.material) {
-          let param = this.plane.material.attachedBlocks[11];
-          param._storedValue = this.lerp(param._storedValue, this.map(mean, 0, 256, param.min, param.max), 0.005);
-          //param._storedValue =  this.map(mean, 0, 256, param.min, param.max);
-        }
+        this.updateTexture();
         this.scene.render();
       }
     });
@@ -58,18 +47,79 @@ export default class Visualizer {
     };
   }
 
+  initShader() {
+    let w = this.analyser.fftSize / 2;
+
+    let raw = new Uint8Array(w * 255 * 4);
+    let texture = BABYLON.RawTexture.CreateRGBATexture(
+      raw,
+      w,
+      255,
+      this.scene,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      true
+    );
+    texture.hasAlpha = true;
+
+    BABYLON.Effect.ShadersStore["customFragmentShader"] = `
+    varying vec2 vUV;
+    uniform sampler2D textureSampler;
+    uniform float time;
+    
+    // Parameters
+    uniform vec2 screenSize;
+
+    vec4 firstColor = vec4(1.0,0.0,0.0,1.0); //red
+    vec4 middleColor = vec4(0.0,1.0,0.0,1.0); // green
+    vec4 endColor = vec4(0.0,0.0,1.0,1.0); // blue
+    
+    void main( void ){
+        vec2 xy = gl_FragCoord.xy / screenSize.xy;
+
+        float h = 0.5; // adjust position of middleColor
+        vec4 col = mix(mix(firstColor, middleColor, xy.x/h), mix(middleColor, endColor, (xy.x - h)/(1.0 - h)), step(h, xy.x));
+
+        gl_FragColor = texture2D(textureSampler, xy) * col;
+    }`;
+
+    var postProcess = new BABYLON.PostProcess("Wave", "custom", ["screenSize"], null, 0.25, this.camera);
+    postProcess.onApply = () => {
+      let effect = postProcess._drawWrapper.effect;
+      let { width, height } = this.canvas.getBoundingClientRect();
+      effect.setFloat2("screenSize", width, height);
+      effect.setTexture("textureSampler", texture);
+    };
+
+    this.updateTexture = () => {
+      this.analyser.getByteTimeDomainData(this.dataArrayAlt);
+
+      for (let i = 0; i < w; i++) {
+        for (let j = 0; j < 255; j++) {
+          let index = 4 * (w * j + i);
+
+          let color = Math.abs(this.dataArrayAlt[i] - j) < 3 ? 255 : 0;
+
+          raw[index + 0] = color;
+          raw[index + 1] = color;
+          raw[index + 2] = color;
+          raw[index + 3] = 255;
+        }
+      }
+
+      texture.update(raw);
+    };
+  }
+
   createScene() {
     this.scene = new BABYLON.Scene(this.engine);
     this.scene.clearColor = new BABYLON.Color3.Black();
 
     var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), this.scene);
     light.intensity = 0.7;
-
-    this.plane = BABYLON.MeshBuilder.CreatePlane("plane", { height: 10, width: 20 });
-
-    BABYLON.NodeMaterial.ParseFromFileAsync("shader", `${this._baseURL}/assets/material.json`, this.scene).then((e) => {
-      this.plane.material = e;
-    });
 
     this.camera = new BABYLON.ArcRotateCamera(
       "Camera",
@@ -80,7 +130,4 @@ export default class Visualizer {
       this.scene
     );
   }
-
-  map = (value, x1, y1, x2, y2) => ((value - x1) * (y2 - x2)) / (y1 - x1) + x2;
-  lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 }
