@@ -140,7 +140,9 @@ export default class pedalboardGui extends HTMLElement {
   async reloadPresets(presets) {
     this.PresetsBank = presets;
 
-    if (this.presetsMenu) this.presetsMenu.remove();
+    if (this.presetsMenu) {
+      this._root.getElementById("collapsePresets").remove();
+    }
     this.presetsMenu = await this.loadMenu();
 
     var details = document.createElement("details");
@@ -360,6 +362,7 @@ export default class pedalboardGui extends HTMLElement {
     button.innerHTML = "New Preset";
     button.classList.add("addBtn");
     button.addEventListener("click", () => {
+      console.log("BANK", bank);
       const preset = "";
       let presetInput = this.createPresetElement(bankNameCallBack, preset);
       this.presets.appendChild(presetInput);
@@ -469,6 +472,7 @@ export default class pedalboardGui extends HTMLElement {
       alert("Empty the bank before trying to delete it");
     } else {
       delete this.PresetsBank[bank];
+      this.presets.innerHTML = "";
       this.banks.removeChild(node);
     }
   }
