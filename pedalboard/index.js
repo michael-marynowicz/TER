@@ -74,17 +74,18 @@ export default class PedalBoardPlugin extends WebAudioModule {
     let json2 = await repos.json();
     let files = await Promise.allSettled(json2.map((el) => fetch(this.removeRelativeUrl(el))));
     let urls = await Promise.all(files.filter(filterFetch).map((el) => el.value.json()));
+
     urls = urls.reduce((arr, next) => arr.concat(next), []);
 
     let responses = await Promise.allSettled(urls.map((el) => fetch(`${el}descriptor.json`)));
 
-    let descriptors = await Promise.all(responses.filter(filterFetch).map((el) => el.value.json()));
+    let descriptors = await Promise.all(responses.map((el) => (filterFetch(el) ? el.value.json() : undefined)));
 
     let modules = await Promise.allSettled(urls.map((el) => import(`${el}index.js`)));
 
     this.WAMS = {};
     descriptors.forEach((el, index) => {
-      if (modules[index].status == "fulfilled") {
+      if (el && modules[index].status == "fulfilled" && !this.WAMS[el.name]) {
         this.WAMS[el.name] = {
           url: urls[index],
           descriptor: el,
