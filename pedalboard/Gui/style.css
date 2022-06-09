@@ -200,6 +200,7 @@ input {
   border: 5px dashed var(--border-color, gray);
   width: 100px;
   height: 220px;
+  z-index: 1;
 }
 
 ::-webkit-scrollbar {
