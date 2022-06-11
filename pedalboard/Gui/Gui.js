@@ -57,10 +57,10 @@ export default class pedalboardGui extends HTMLElement {
       canvas.on = !canvas.on;
     });
 
-    var body = document.createElement("body");
-    body.appendChild(this.main);
+    this.body = document.createElement("body");
+    this.body.appendChild(this.main);
 
-    this._root.appendChild(body);
+    this._root.appendChild(this.body);
   }
 
   /**
@@ -606,10 +606,10 @@ export default class pedalboardGui extends HTMLElement {
    * Return DataWidth and DataHeight values.
    */
   get properties() {
-    const bbox = this.body.getBoundingClientRect();
+    const bbox = this.body?.getBoundingClientRect();
     return {
-      dataWidth: { value: bbox.width },
-      dataHeight: { value: bbox.height },
+      dataWidth: { value: bbox?.width || 1002 },
+      dataHeight: { value: bbox?.height || 609 },
     };
   }
 
