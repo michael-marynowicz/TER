@@ -382,7 +382,6 @@ export default class pedalboardGui extends HTMLElement {
     button.innerHTML = "New Preset";
     button.classList.add("addBtn");
     button.addEventListener("click", () => {
-      console.log("BANK", bank);
       const preset = "";
       let presetInput = this.createPresetElement(bankNameCallBack, preset);
       this.presets.appendChild(presetInput);
