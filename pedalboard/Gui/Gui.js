@@ -191,59 +191,78 @@ export default class pedalboardGui extends HTMLElement {
   /**
    * Create the gui for the plugin and then the wrapper around it.
    * We need to resize it with resizeWrapper at the end.
+   * If the customElement of the gui was already used we need to define it
+   * with a new id until it's free to be defined.
    * @param {WebAudioModule} instance
    * @param {HTMLElement} img
    * @param {int} id
    * @author Quentin Beauchet
    */
-  addPlugin(instance, img, id) {
-    instance.createGui().then((gui) => {
-      let wrapper = document.createElement("article");
-      wrapper.draggable = true;
-      wrapper.ondragstart = (event) => {
-        event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
-        this.dragOrigin = wrapper;
-      };
-      wrapper.ondragover = (event) => {
-        let target = this.getWrapper(event);
-        let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
-        if (target && this.dragOrigin) {
-          this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
+  async addPlugin(instance, img, id) {
+    var gui;
+    try {
+      gui = await instance.createGui();
+    } catch (e) {
+      if (e instanceof TypeError) {
+        let path = e.stack.split("\n")[1].split("(")[1].split(":").slice(0, -2).join(":");
+        let module = await import(path);
+        let name = module.default.name.toLowerCase();
+        let id = 0;
+        while (customElements.get(`${name}-${id}`)) {
+          id++;
+          if (id > 1000) throw new Error("Element already defined");
         }
-      };
-      wrapper.ondragend = (event) => {
-        event.preventDefault();
-        if (this.dropZone.parentElement == this.board) {
-          this.board.removeChild(this.dropZone);
-        }
-      };
+        customElements.define(`${name}-${id}`, module.default);
+        gui = await instance.createGui();
+      } else {
+        throw e;
+      }
+    }
+    let wrapper = document.createElement("article");
+    wrapper.draggable = true;
+    wrapper.ondragstart = (event) => {
+      event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
+      this.dragOrigin = wrapper;
+    };
+    wrapper.ondragover = (event) => {
+      let target = this.getWrapper(event);
+      let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
+      if (target && this.dragOrigin) {
+        this.board.insertBefore(this.dropZone, mid > event.x ? target : target.nextSibling);
+      }
+    };
+    wrapper.ondragend = (event) => {
+      event.preventDefault();
+      if (this.dropZone.parentElement == this.board) {
+        this.board.removeChild(this.dropZone);
+      }
+    };
 
-      let header = document.createElement("header");
-      let title = document.createElement("h2");
-      title.innerHTML = instance.name;
-      header.appendChild(title);
+    let header = document.createElement("header");
+    let title = document.createElement("h2");
+    title.innerHTML = instance.name;
+    header.appendChild(title);
 
-      let cross = document.createElement("img");
-      cross.src = this._crossIMGUrl;
-      cross.setAttribute("crossorigin", "anonymous");
-      cross.addEventListener("click", () => {
-        this._plug.pedalboardNode.disconnectNodes(this.board.childNodes, false, () => this.board.removeChild(wrapper));
-      });
-      header.append(cross);
-      wrapper.appendChild(gui);
-      wrapper.id = id;
-      wrapper.classList.add("nodeArticle");
-
-      this.board.appendChild(wrapper);
-
-      // We need to do this because the HTMLElement is not fully loaded and the BoundingClientRect returns falsy values.
-      wrapper.hidden = true;
-      setTimeout(() => {
-        wrapper.hidden = false;
-        this.resizeWrapper(wrapper, header, title, cross, gui);
-        wrapper.insertBefore(header, gui);
-      }, 10);
+    let cross = document.createElement("img");
+    cross.src = this._crossIMGUrl;
+    cross.setAttribute("crossorigin", "anonymous");
+    cross.addEventListener("click", () => {
+      this._plug.pedalboardNode.disconnectNodes(this.board.childNodes, false, () => this.board.removeChild(wrapper));
     });
+    header.append(cross);
+    wrapper.appendChild(gui);
+    wrapper.id = id;
+    wrapper.classList.add("nodeArticle");
+
+    this.board.appendChild(wrapper);
+
+    // We need to do this because the HTMLElement is not fully loaded and the BoundingClientRect returns falsy values.
+    wrapper.hidden = true;
+    setTimeout(() => {
+      wrapper.hidden = false;
+      this.resizeWrapper(wrapper, header, title, cross, gui);
+      wrapper.insertBefore(header, gui);
+    }, 10);
   }
 
   /**

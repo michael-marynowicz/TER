@@ -117,7 +117,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
       instance.audioNode.setState(state);
     }
     this.pedalboardNode.addPlugin(instance.audioNode, WamName, this.id);
-    this.gui.addPlugin(instance, this.WAMS[WamName].img, this.id);
+    await this.gui.addPlugin(instance, this.WAMS[WamName].img, this.id);
     this.id++;
   }
 
