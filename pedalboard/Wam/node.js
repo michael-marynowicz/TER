@@ -1,30 +1,38 @@
-import CompositeAudioNode from "../../../plugins/utils/sdk-parammgr/src/CompositeAudioNode.js";
+import WamNode from "../../../plugins/utils/sdk/src/WamNode.js";
+import addFunctionModule from "../../plugins/utils/sdk/src/addFunctionModule.js";
+import getCustomProcessor from "./CustomProcessor.js";
 
-export default class PedalBoardNode extends CompositeAudioNode {
+export default class PedalBoardNode extends WamNode {
   /**
-   * @type {ParamMgrNode}
+   * Register scripts required for the processor. Must be called before constructor.
+   * @param {BaseAudioContext} audioContext
+   * @param {string} moduleId
    */
-  _wamNode = undefined;
+  static async addModules(audioContext, moduleId) {
+    const { audioWorklet } = audioContext;
+    await super.addModules(audioContext, moduleId);
+    await addFunctionModule(audioWorklet, getCustomProcessor, moduleId);
+  }
 
   nodes = {};
   pedalBoardInfos = {};
   lastParameterValue = {};
 
-  /**
-   * @param {ParamMgrNode} wamNode
-   */
-  setup(wamNode) {
-    this._wamNode = wamNode;
-    this.connectNodes([]);
-  }
+  constructor(plugin) {
+    super(plugin, {
+      processorOptions: {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+      },
+    });
 
-  constructor(context, options) {
-    super(context, options);
     this.createNodes();
+    this.connectNodes([]);
+    this._initialize();
   }
 
   /**
-   * Create the input and outpur nodes of the PedalBoard.
+   * Create the input and output nodes of the PedalBoard.
    * @author Quentin Beauchet
    */
   createNodes() {
@@ -131,7 +139,7 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * @author Quentin Beauchet, Yann Forner
    */
   async getState() {
-    let gui = this._wamNode.module.gui;
+    let gui = this.module.gui;
     let ids = Array.from(gui.board.childNodes).map((el) => el.id);
     let states = await Promise.all(ids.map((id) => this.nodes[id].node.getState()));
 
@@ -150,8 +158,8 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * @author  Yann Forner
    */
   async setState(state) {
-    this._wamNode.module.loadPreset(state.current);
-    await this._wamNode.module.gui.reloadPresets(state.presets);
+    this.module.loadPreset(state.current);
+    await this.module.gui.reloadPresets(state.presets);
   }
 
   /**
@@ -168,56 +176,11 @@ export default class PedalBoardNode extends CompositeAudioNode {
    * @author Quentin Beauchet
    */
   updateInfos() {
-    this._wamNode.dispatchEvent(
+    this.dispatchEvent(
       new CustomEvent("wam-info", {
         detail: { data: this },
       })
     );
-  }
-
-  /**
-   * If we don't already store the informations, we get it from each nodes in the PedalBoard and we give each a
-   * unique key with the order of the nodeName and the label. If this.pedalBoardInfos is not empty, for each id passed as parameter we
-   * return the information stored in it.
-   * @param  {string[]} parameterIdQuery A list a node parameters ids.
-   * @returns A object including informations aboput each parameter id passed as parameters.
-   * @author Quentin Beauchet
-   */
-  async getParameterInfo(...parameterIdQuery) {
-    if (parameterIdQuery.length == 0) {
-      this.pedalBoardInfos = {
-        "PedalBoard/Mix": {
-          id: "PedalBoard/Mix",
-          defaultValue: 1,
-          label: "Mix",
-          maxValue: 1,
-          minValue: 0,
-          type: "float",
-        },
-      };
-      var pedalNames = {};
-
-      const keys = Object.keys(this.nodes);
-      var childInfos = await Promise.all(keys.map((key) => this.nodes[key].node.getParameterInfo()));
-      childInfos.forEach((child, i) => {
-        const infos = Object.keys(child);
-        const pedalName = this.nodes[keys[i]].name;
-        pedalNames[pedalName] = pedalNames[pedalName] == undefined ? 0 : pedalNames[pedalName] + 1;
-
-        infos.forEach((key) => {
-          let info = child[key];
-          info.pedalId = keys[i];
-          info.label = `n°${i} ${pedalName} -> ${info.label}`;
-          this.pedalBoardInfos[info.label] = info;
-        });
-      });
-      return this.pedalBoardInfos;
-    } else {
-      return parameterIdQuery.reduce((infos, id) => {
-        infos[id] = this.pedalBoardInfos[id];
-        return infos;
-      }, {});
-    }
   }
 
   /**

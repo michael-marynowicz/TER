@@ -1,5 +1,4 @@
 import WebAudioModule from "../../plugins/utils/sdk/src/WebAudioModule.js";
-import ParamMgrFactory from "../../plugins/utils/sdk-parammgr/src/ParamMgrFactory.js";
 import PedalBoardNode from "./Wam/node.js";
 import { createElement } from "./Gui/index.js";
 
@@ -11,7 +10,6 @@ const getBasetUrl = (relativeURL) => {
   const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
   return baseURL;
 };
-
 export default class PedalBoardPlugin extends WebAudioModule {
   _baseURL = getBasetUrl(new URL(".", import.meta.url));
 
@@ -48,10 +46,9 @@ export default class PedalBoardPlugin extends WebAudioModule {
    * @author Quentin Beauchet
    */
   async createAudioNode(initialState) {
-    this.pedalboardNode = new PedalBoardNode(this.audioContext);
+    await PedalBoardNode.addModules(this.audioContext, this.moduleId);
+    this.pedalboardNode = new PedalBoardNode(this, {});
 
-    const paramMgrNode = await ParamMgrFactory.create(this, {});
-    this.pedalboardNode.setup(paramMgrNode);
     if (initialState) {
       this.pedalboardNode.initialState = initialState;
     } else {
