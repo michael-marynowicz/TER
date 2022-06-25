@@ -1,5 +1,5 @@
 import WebAudioModule from "../../plugins/utils/sdk/src/WebAudioModule.js";
-import PedalBoardNode from "./Wam/node.js";
+import PedalBoardNode from "./Wam/PedalBoardNode.js";
 import { createElement } from "./Gui/index.js";
 
 /**
@@ -48,6 +48,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
   async createAudioNode(initialState) {
     await PedalBoardNode.addModules(this.audioContext, this.moduleId);
     this.pedalboardNode = new PedalBoardNode(this, {});
+    await this.pedalboardNode._initialize();
 
     if (initialState) {
       this.pedalboardNode.initialState = initialState;
@@ -109,7 +110,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
    */
   async addWAM(WamName, state) {
     const { default: WAM } = this.WAMS[WamName].module;
-    let instance = await WAM.createInstance(this.pedalboardNode.module._groupId, this.pedalboardNode.context);
+    let instance = await WAM.createInstance(this.pedalboardNode.subGroupId, this.pedalboardNode.context);
     if (state) {
       instance.audioNode.setState(state);
     }

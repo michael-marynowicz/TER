@@ -25,26 +25,41 @@ export default class PedalBoardNode extends WamNode {
         numberOfOutputs: 1,
       },
     });
+    this._supportedEventTypes.add("wam-info");
+  }
 
-    this.createNodes();
+  async _initialize() {
+    await super._initialize();
+    const { default: initializeWamHost } = await import("../../plugins/utils/sdk/src/initializeWamHost.js");
+    let [subGroupId, subGroupKey] = await initializeWamHost(this.module.audioContext);
+    this.subGroupId = subGroupId;
+
+    const { default: WAM } = await import("./WamEventDestination.js");
+    const destination = await WAM.createInstance(subGroupId, this.context);
+
+    this.port.postMessage({
+      request: "set/init",
+      content: { subGroupId, subGroupKey, destinationId: destination.instanceId },
+    });
+
+    this.createNodes(destination.audioNode);
     this.connectNodes([]);
-    this._initialize();
   }
 
   /**
    * Create the input and output nodes of the PedalBoard.
    * @author Quentin Beauchet
    */
-  createNodes() {
+  createNodes(output) {
     this._input = this.context.createGain();
     this.connect(this._input);
-    this._output = this.context.createGain();
 
-    this.analyser = this.context.createAnalyser();
-    this.analyser.minDecibels = -90;
-    this.analyser.maxDecibels = -10;
-    this.analyser.smoothingTimeConstant = 0.85;
-    this._output.connect(this.analyser);
+    this._output = this.context.createAnalyser();
+    this._output.minDecibels = -90;
+    this._output.maxDecibels = -10;
+    this._output.smoothingTimeConstant = 0.85;
+
+    //this._output.connect(output);
   }
 
   /**
@@ -176,59 +191,14 @@ export default class PedalBoardNode extends WamNode {
    * @author Quentin Beauchet
    */
   updateInfos() {
+    this.port.postMessage({
+      request: "set/nodes",
+      content: { nodes: Object.values(this.nodes).map((val) => val.node.instanceId) },
+    });
     this.dispatchEvent(
       new CustomEvent("wam-info", {
         detail: { data: this },
       })
     );
-  }
-
-  /**
-   * Returns the parameter values from a node in the PedalBoard, we also store the response in this.lastParameterValue
-   * if we need it inside scheduleEvents().
-   *
-   * @param {boolean} normalized This parameter is heredited from CompositeAudioNode but it is not used.
-   * @param {string} parameterIdQuery The id of the node in the PedalBoard, it was set in getParameterInfo().
-   * @returns The parameter values of the node.
-   * @author Quentin Beauchet
-   */
-  async getParameterValues(normalized, parameterIdQuery) {
-    let parameter = this.pedalBoardInfos[parameterIdQuery];
-    if (parameter) {
-      if (parameter.id == "PedalBoard/Mix") {
-        return { [parameterIdQuery]: this._output.gain };
-      }
-      this.lastParameterValue = await this.nodes[parameter.pedalId].node.getParameterValues();
-      return {
-        [parameterIdQuery]: this.lastParameterValue[parameter.id],
-      };
-    }
-  }
-
-  /**
-   * When an event is sent to the PedalBoard, then we get the info from the event data
-   * and if the id is PedalBoard/Mix we change the _output node of the PedalBoard.
-   * Otherwise we get the informations from the last node where the getParameterValues()
-   * was called and we propagate the event to it.
-   *
-   * @param  {WamEvent[]} events List of events to propagate to the nodes in the PedalBoard.
-   * @author Quentin Beauchet
-   */
-  scheduleEvents(...events) {
-    events.forEach((event) => {
-      const { type, data, time } = event;
-      const info = this.pedalBoardInfos[data.id];
-      if (info.id == "PedalBoard/Mix") {
-        this._output.gain.value = data.value;
-      } else {
-        const { id, normalized } = this.lastParameterValue[info.id];
-        this.nodes[info.pedalId].node.scheduleEvents({
-          type,
-          time,
-          data: { id, normalized, value: data.value },
-        });
-      }
-    });
-    this._wamNode.call("scheduleEvents", ...events);
   }
 }
