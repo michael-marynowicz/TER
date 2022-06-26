@@ -17,6 +17,7 @@ main {
   height: 280px;
   border: 1px solid var(--border-color, #31353a);
   border-radius: 0.25rem;
+  position: relative;
 }
 
 img {
@@ -32,11 +33,8 @@ img {
   padding: 1rem;
   overflow-x: auto;
   overflow-y: hidden;
-  background: var(--bg-color, #151718);
-  background-image: linear-gradient(var(--border-color, #31353a) 0.01rem, transparent 0.1em),
-    linear-gradient(90deg, var(--border-color, #31353a) 0.01rem, transparent 0.1em);
-  background-size: 3em 3em;
   border: 1px solid var(--border-color, #31353a);
+  border-width: 1px 1px 1px 0;
 }
 
 #board > * {
@@ -63,8 +61,8 @@ img {
 #banks,
 #presets,
 #infos {
-  padding: 0 1rem 0.5rem 1rem;
   overflow-y: auto;
+  padding: 0 5% 0.5rem 5%;
 }
 
 #banks,
@@ -164,6 +162,10 @@ input {
   user-select: none;
 }
 
+.listElementButton:last-child {
+  margin-right: 0;
+}
+
 .flex-container {
   list-style: none;
   display: flex;
@@ -206,7 +208,6 @@ input {
 }
 
 section {
-  background-color: var(--bg-color, #151718);
   flex-shrink: 0;
   width: 20%;
 }
@@ -242,8 +243,18 @@ section {
 
 #presetsONOFF {
   color: var(--text-color, white);
-  padding: 0;
+  padding: 0.25rem;
   background-color: var(--bg-color, #151718);
   border: 1px solid var(--border-color, #31353a);
   font-size: 1.5rem;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-color: black;
 }
