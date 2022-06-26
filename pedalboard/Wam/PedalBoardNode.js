@@ -59,6 +59,7 @@ export default class PedalBoardNode extends WamNode {
 
   connect(destination, outputIndex, inputIndex) {
     this._output.connect(destination, outputIndex, inputIndex);
+    if (destination instanceof AudioNode) return destination;
   }
 
   /**
