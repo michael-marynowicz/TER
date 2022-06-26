@@ -34,15 +34,12 @@ export default class PedalBoardNode extends WamNode {
     let [subGroupId, subGroupKey] = await initializeWamHost(this.module.audioContext);
     this.subGroupId = subGroupId;
 
-    const { default: WAM } = await import("./WamEventDestination.js");
-    const destination = await WAM.createInstance(subGroupId, this.context);
-
     this.port.postMessage({
       request: "set/init",
-      content: { subGroupId, subGroupKey, destinationId: destination.instanceId },
+      content: { subGroupId, subGroupKey },
     });
 
-    this.createNodes(destination.audioNode);
+    this.createNodes();
     this.connectNodes([]);
   }
 
@@ -50,16 +47,18 @@ export default class PedalBoardNode extends WamNode {
    * Create the input and output nodes of the PedalBoard.
    * @author Quentin Beauchet
    */
-  createNodes(output) {
+  createNodes() {
     this._input = this.context.createGain();
-    this.connect(this._input);
+    super.connect(this._input);
 
     this._output = this.context.createAnalyser();
     this._output.minDecibels = -90;
     this._output.maxDecibels = -10;
     this._output.smoothingTimeConstant = 0.85;
+  }
 
-    //this._output.connect(output);
+  connect(destination, outputIndex, inputIndex) {
+    this._output.connect(destination, outputIndex, inputIndex);
   }
 
   /**

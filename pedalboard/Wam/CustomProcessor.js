@@ -1,11 +1,9 @@
 const getCustomProcessor = (moduleId) => {
   const audioWorkletGlobalScope = globalThis;
-  const { registerProcessor, webAudioModules } = audioWorkletGlobalScope;
+  const { registerProcessor } = audioWorkletGlobalScope;
 
   const ModuleScope = audioWorkletGlobalScope.webAudioModules.getModuleScope(moduleId);
-  const { WamProcessor, WamParameterInfo } = ModuleScope;
-
-  console.log(audioWorkletGlobalScope.webAudioModules, ModuleScope);
+  const { WamProcessor } = ModuleScope;
 
   class CustomProcessor extends WamProcessor {
     constructor(options) {
@@ -30,22 +28,30 @@ const getCustomProcessor = (moduleId) => {
       }
     }
 
+    /**
+     * If we don't already store the informations, we get it from each nodes in the PedalBoard and we give each a
+     * unique key with the order of the nodeName and the label. If this._parameterInfo is not empty, for each id passed as parameter we
+     * return the information stored in it.
+     * @param  {string[]} parameterIdQuery A list a node parameters ids.
+     * @returns A object including informations about each parameter id passed as parameters.
+     * @author Quentin Beauchet
+     */
     async getParameterInfo(...parameterIdQuery) {
       if (parameterIdQuery.length == 0) {
         this._parameterInfo = {};
 
-        var pedalNames = {};
         var childInfos = await Promise.all(
           this.nodes.map((nodeId) => this.group.processors.get(nodeId).getParameterInfo())
         );
+
         childInfos.forEach((child, i) => {
+          child = JSON.parse(JSON.stringify(child));
           const infos = Object.keys(child);
-          const pedalName = this.nodes[i];
-          pedalNames[pedalName] = pedalNames[pedalName] == undefined ? 0 : pedalNames[pedalName] + 1;
+          const pedalId = this.nodes[i];
 
           infos.forEach((key) => {
             let info = child[key];
-            info.pedalId = this.nodes[i];
+            info.pedalId = pedalId;
             this._parameterInfo[`n°${i} ${info.pedalId} -> ${info.label}`] = info;
           });
         });
@@ -59,6 +65,13 @@ const getCustomProcessor = (moduleId) => {
       }
     }
 
+    /**
+     * Returns the parameter values from a node in the PedalBoard.
+     * @param {boolean} normalized This parameter is heredited from WamProcessor but it is not used.
+     * @param {string} parameterIdQuery The id of the node in the PedalBoard, it was set in getParameterInfo().
+     * @returns The parameter values of the node.
+     * @author Quentin Beauchet
+     */
     async getParameterValues(normalized, parameterIdQuery) {
       let parameter = this._parameterInfo[parameterIdQuery];
       if (parameter) {
@@ -72,11 +85,8 @@ const getCustomProcessor = (moduleId) => {
     async _onMessage(message) {
       const { id, request, content } = message.data;
       if (request == "set/init") {
-        let { subGroupId, subGroupKey, destinationId } = content;
+        let { subGroupId, subGroupKey } = content;
         this.group = audioWorkletGlobalScope.webAudioModules.getGroup(subGroupId, subGroupKey);
-
-        this.destProcessor = this.group.processors.get(destinationId);
-        this.destProcessor.onScheduleEvents = (...events) => this.selfEmitEvents(...events);
       } else if (request == "set/nodes") {
         this.nodes = content.nodes;
       } else if (request == "get/parameterInfo") {
@@ -95,6 +105,11 @@ const getCustomProcessor = (moduleId) => {
       }
     }
 
+    /**
+     * When an event is sent to the PedalBoard we propagate it to the wam in his chain.
+     * @param  {WamEvent[]} events List of events to propagate to the nodes in the PedalBoard.
+     * @author Quentin Beauchet
+     */
     scheduleEvents(...events) {
       events.forEach((event) => {
         const { type, data, time } = event;
@@ -113,10 +128,6 @@ const getCustomProcessor = (moduleId) => {
       for (let node of this.nodes) {
         this.group.processors.get(node).clearEvents();
       }
-    }
-
-    selfEmitEvents(...events) {
-      webAudioModules.emitEvents(this, ...events);
     }
   }
 
