@@ -62,6 +62,10 @@ export default class PedalBoardNode extends WamNode {
     if (destination instanceof AudioNode) return destination;
   }
 
+  disconnect(destination, outputIndex, inputIndex) {
+    this._output.disconnect(destination, outputIndex, inputIndex);
+  }
+
   /**
    * Connect every nodes from the board of the Gui.
    * @param {HTMLCollection} nodes
