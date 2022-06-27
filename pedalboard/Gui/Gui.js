@@ -25,22 +25,7 @@ export default class pedalboardGui extends HTMLElement {
 
     this._root = this.attachShadow({ mode: "open" });
 
-    this.loaded = new Promise((resolve, reject) => {
-      (async () => {
-        await this.init();
-
-        new ResizeObserver(function (entries) {
-          if (entries[0].contentRect.width == entries[0].target.baseWidth) {
-            this.disconnect();
-            resolve(true);
-          }
-        }).observe(this);
-
-        setInterval(() => {
-          reject("Took too long to load");
-        }, 10000);
-      })();
-    });
+    this.loaded = this.init();
   }
 
   /**
@@ -48,6 +33,7 @@ export default class pedalboardGui extends HTMLElement {
    * thumnails to select the WAM to add, the board where you can see the Gui of the
    * plugins and you can drag and drop them to change the order or remove them with the
    * cross and the presets section where you can save and load presets.
+   * It returns a promise to make sure that the plugin will be 100% ready when scaled if it's the case.
    * @author Quentin Beauchet
    */
   async init() {
@@ -76,6 +62,19 @@ export default class pedalboardGui extends HTMLElement {
     this.body.appendChild(this.main);
 
     this._root.appendChild(this.body);
+
+    return new Promise((resolve, reject) => {
+      new ResizeObserver(function (entries) {
+        if (entries[0].contentRect.width == entries[0].target.baseWidth) {
+          this.disconnect();
+          resolve(true);
+        }
+      }).observe(this);
+
+      setInterval(() => {
+        reject("Took too long to load");
+      }, 10000);
+    });
   }
 
   /**
@@ -236,10 +235,12 @@ export default class pedalboardGui extends HTMLElement {
     let wrapper = document.createElement("article");
     wrapper.draggable = true;
     wrapper.ondragstart = (event) => {
+      event.preventDefault();
       event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
       this.dragOrigin = wrapper;
     };
     wrapper.ondragover = (event) => {
+      event.preventDefault();
       let target = this.getWrapper(event);
       let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
       if (target && this.dragOrigin) {
