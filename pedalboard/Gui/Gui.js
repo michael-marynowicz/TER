@@ -184,6 +184,10 @@ export default class pedalboardGui extends HTMLElement {
     this.board = document.createElement("div");
     this.board.id = "board";
 
+    this.board.ondragstart = (event) => {
+      event.stopPropagation();
+    };
+
     this.dropZone = document.createElement("div");
     this.dropZone.id = "dropZone";
     this.dropZone.ondragover = (e) => e.preventDefault();
@@ -235,12 +239,10 @@ export default class pedalboardGui extends HTMLElement {
     let wrapper = document.createElement("article");
     wrapper.draggable = true;
     wrapper.ondragstart = (event) => {
-      event.preventDefault();
       event.dataTransfer.setDragImage(img, img.width / 2, img.height / 2);
       this.dragOrigin = wrapper;
     };
     wrapper.ondragover = (event) => {
-      event.preventDefault();
       let target = this.getWrapper(event);
       let mid = target.getBoundingClientRect().x + target.getBoundingClientRect().width / 2;
       if (target && this.dragOrigin) {
@@ -665,4 +667,8 @@ export default class pedalboardGui extends HTMLElement {
   }
 }
 
-customElements.define("wam2-pedalboard", pedalboardGui);
+try {
+  customElements.define("wam2-pedalboard", pedalboardGui);
+} catch (error) {
+  console.log(error);
+}
