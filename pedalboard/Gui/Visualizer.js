@@ -90,7 +90,8 @@ export default class Visualizer {
     postProcess.onApply = () => {
       let effect = postProcess._drawWrapper.effect;
       let { width, height } = this.canvas.getBoundingClientRect();
-      effect.setFloat2("screenSize", width, height);
+      let parentScaling = this.canvas.getBoundingClientRect().width / this.canvas.offsetWidth;
+      effect.setFloat2("screenSize", width / parentScaling, height / parentScaling);
       effect.setTexture("textureSampler", texture);
     };
 
