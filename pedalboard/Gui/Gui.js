@@ -25,7 +25,12 @@ export default class pedalboardGui extends HTMLElement {
 
     this._root = this.attachShadow({ mode: "open" });
 
-    this.init();
+    this.loaded = new Promise((resolve, reject) => {
+      (async () => {
+        await this.init();
+        resolve(true);
+      })();
+    });
   }
 
   /**
@@ -256,13 +261,10 @@ export default class pedalboardGui extends HTMLElement {
 
     this.board.appendChild(wrapper);
 
-    // We need to do this because the HTMLElement is not fully loaded and the BoundingClientRect returns falsy values.
-    wrapper.hidden = true;
-    setTimeout(() => {
-      wrapper.hidden = false;
-      this.resizeWrapper(wrapper, header, title, cross, gui);
-      wrapper.insertBefore(header, gui);
-    }, 10);
+    if (gui.loaded) await gui.loaded();
+
+    this.resizeWrapper(wrapper, header, title, cross, gui);
+    wrapper.insertBefore(header, gui);
   }
 
   /**
