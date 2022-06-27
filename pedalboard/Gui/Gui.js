@@ -636,7 +636,7 @@ export default class pedalboardGui extends HTMLElement {
    * @author Quentin Beauchet
    */
   setStyle() {
-    this.style.display = "block";
+    this.style.display = "inline-flex";
 
     var head = document.createElement("head");
 
