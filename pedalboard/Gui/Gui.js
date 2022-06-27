@@ -28,7 +28,17 @@ export default class pedalboardGui extends HTMLElement {
     this.loaded = new Promise((resolve, reject) => {
       (async () => {
         await this.init();
-        resolve(true);
+
+        new ResizeObserver(function (entries) {
+          if (entries[0].contentRect.width == entries[0].target.baseWidth) {
+            this.disconnect();
+            resolve(true);
+          }
+        }).observe(this);
+
+        setInterval(() => {
+          reject("Took too long to load");
+        }, 10000);
       })();
     });
   }
@@ -261,7 +271,7 @@ export default class pedalboardGui extends HTMLElement {
 
     this.board.appendChild(wrapper);
 
-    if (gui.loaded) await gui.loaded();
+    await gui.loaded;
 
     this.resizeWrapper(wrapper, header, title, cross, gui);
     wrapper.insertBefore(header, gui);
@@ -628,8 +638,8 @@ export default class pedalboardGui extends HTMLElement {
   get properties() {
     const bbox = this.body?.getBoundingClientRect();
     return {
-      dataWidth: { value: bbox?.width || 1002 },
-      dataHeight: { value: bbox?.height || 609 },
+      dataWidth: { value: bbox?.width || this.baseWidth },
+      dataHeight: { value: bbox?.height || this.baseHeight },
     };
   }
 
@@ -639,6 +649,8 @@ export default class pedalboardGui extends HTMLElement {
    */
   setStyle() {
     this.style.display = "inline-flex";
+    this.baseWidth = 1002;
+    this.baseHeight = 609;
 
     var head = document.createElement("head");
 

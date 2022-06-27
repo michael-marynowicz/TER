@@ -94,7 +94,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
   }
 
   async loadPreset(nodes) {
-    let board = this.pedalboardNode.module.gui.board;
+    let board = this.gui.board;
     this.pedalboardNode.disconnectNodes(board.childNodes, true);
     board.innerHTML = "";
     for (let el of nodes) {

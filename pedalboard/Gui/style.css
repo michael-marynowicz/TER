@@ -7,8 +7,7 @@
 }
 
 body {
-  width: 1002px;
-  height: 609px;
+  width: min-content;
   margin: 0;
 }
 
