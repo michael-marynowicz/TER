@@ -1,6 +1,13 @@
 const player = document.querySelector("#player");
 const mount = document.querySelector("#mount");
 
+const saveState = document.getElementById("save");
+const restoreState = document.getElementById("restore");
+const deleteState = document.getElementById("delete");
+const inCache = document.getElementById("inCache");
+
+inCache.setAttribute("data", localStorage.getItem("instanceState") != null);
+
 // Safari...
 const AudioContext =
   window.AudioContext || // Default
@@ -47,4 +54,22 @@ const mountPlugin = (domNode) => {
   player.onplay = () => {
     audioContext.resume(); // audio context must be resumed because browser restrictions
   };
+
+  saveState.addEventListener("click", async () => {
+    let state = await instance.audioNode.getState();
+    localStorage.setItem("instanceState", JSON.stringify(state));
+    inCache.setAttribute("data", true);
+  });
+
+  restoreState.addEventListener("click", async () => {
+    let state = localStorage.getItem("instanceState");
+    if (state) {
+      await instance.audioNode.setState(JSON.parse(state));
+    }
+  });
+
+  deleteState.addEventListener("click", async () => {
+    localStorage.removeItem("instanceState");
+    inCache.setAttribute("data", false);
+  });
 })();
