@@ -111,11 +111,11 @@ export default class PedalBoardPlugin extends WebAudioModule {
   async addWAM(WamName, state) {
     const { default: WAM } = this.WAMS[WamName].module;
     let instance = await WAM.createInstance(this.pedalboardNode.subGroupId, this.pedalboardNode.context);
+    this.pedalboardNode.addPlugin(instance.audioNode, WamName, this.id);
+    await this.gui.addPlugin(instance, this.WAMS[WamName].img, this.id);
     if (state) {
       instance.audioNode.setState(state);
     }
-    this.pedalboardNode.addPlugin(instance.audioNode, WamName, this.id);
-    await this.gui.addPlugin(instance, this.WAMS[WamName].img, this.id);
     this.id++;
   }
 
