@@ -149,6 +149,9 @@ export default class PedalBoardNode extends WamNode {
     this.connectPlugin(audioNode);
     this.nodes[id] = { name: pedalName, node: audioNode };
     this.updateInfos();
+    audioNode.addEventListener("wam-info", () => {
+      this.updateInfos();
+    });
   }
 
   /**
@@ -196,7 +199,11 @@ export default class PedalBoardNode extends WamNode {
   updateInfos() {
     this.port.postMessage({
       request: "set/nodes",
-      content: { nodes: Object.values(this.nodes).map((val) => val.node.instanceId) },
+      content: {
+        nodes: Object.values(this.nodes).map((val) => {
+          return { name: val.name, nodeId: val.node.instanceId };
+        }),
+      },
     });
     this.dispatchEvent(
       new CustomEvent("wam-info", {

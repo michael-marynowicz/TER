@@ -41,18 +41,19 @@ const getCustomProcessor = (moduleId) => {
         this._parameterInfo = {};
 
         var childInfos = await Promise.all(
-          this.nodes.map((nodeId) => this.group.processors.get(nodeId).getParameterInfo())
+          this.nodes.map((node) => this.group.processors.get(node.nodeId).getParameterInfo())
         );
 
         childInfos.forEach((child, i) => {
           child = JSON.parse(JSON.stringify(child));
           const infos = Object.keys(child);
-          const pedalId = this.nodes[i];
+          const pedalId = this.nodes[i].nodeId;
+          const pedalName = this.nodes[i].name;
 
           infos.forEach((key) => {
             let info = child[key];
             info.pedalId = pedalId;
-            this._parameterInfo[`n°${i} ${info.pedalId} -> ${info.label}`] = info;
+            this._parameterInfo[`n°${i} ${pedalName} -> ${info.label}`] = info;
           });
         });
 
@@ -126,7 +127,7 @@ const getCustomProcessor = (moduleId) => {
 
     clearEvents() {
       for (let node of this.nodes) {
-        this.group.processors.get(node).clearEvents();
+        this.group.processors.get(node.nodeId).clearEvents();
       }
     }
   }

@@ -503,7 +503,7 @@ export default class pedalboardGui extends HTMLElement {
   deleteBank(bankNameCallBack, node) {
     const bank = bankNameCallBack();
     if (Object.keys(this.PresetsBank[bank]).length != 0) {
-      alert("Empty the bank before trying to delete it");
+      alert("Empty the bank before you try to delete it");
     } else {
       delete this.PresetsBank[bank];
       this.presets.innerHTML = "";

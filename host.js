@@ -1,10 +1,17 @@
+import AutomationTrack from "./AutomationTrack.js";
+
 const player = document.querySelector("#player");
 const mount = document.querySelector("#mount");
 
+const main = document.querySelector("main");
 const saveState = document.getElementById("save");
 const restoreState = document.getElementById("restore");
 const deleteState = document.getElementById("delete");
 const inCache = document.getElementById("inCache");
+const automationSelector = document.getElementById("param-select");
+const download = document.getElementById("download");
+const upload = document.getElementById("upload");
+const input = document.getElementById("upload-input");
 
 inCache.setAttribute("data", localStorage.getItem("instanceState") != null);
 
@@ -55,6 +62,8 @@ const mountPlugin = (domNode) => {
     audioContext.resume(); // audio context must be resumed because browser restrictions
   };
 
+  //State
+
   saveState.addEventListener("click", async () => {
     let state = await instance.audioNode.getState();
     localStorage.setItem("instanceState", JSON.stringify(state));
@@ -71,5 +80,57 @@ const mountPlugin = (domNode) => {
   deleteState.addEventListener("click", async () => {
     localStorage.removeItem("instanceState");
     inCache.setAttribute("data", false);
+  });
+
+  download.addEventListener("click", async () => {
+    let state = await instance.audioNode.getState();
+    const blob = new Blob([JSON.stringify(state, undefined, 2)]);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "PedalBoard-State.json";
+    link.click();
+  });
+
+  upload.addEventListener("click", () => {
+    input.click();
+  });
+
+  input.addEventListener("change", (e) => {
+    let files = input.files;
+    if (files.length > 0 && files[0].type == "application/json") {
+      try {
+        var fr = new FileReader();
+        fr.onload = async () => {
+          await instance.audioNode.setState(JSON.parse(fr.result));
+        };
+        fr.readAsText(files[0]);
+      } catch {
+        console.warn("Could not import PedalBoard-State");
+      }
+    }
+  });
+
+  //Automation
+
+  instance.audioNode.addEventListener("wam-info", async () => {
+    window.pluginInfos = await instance.audioNode.getParameterInfo();
+    let keys = Object.keys(window.pluginInfos);
+
+    automationSelector.innerHTML = '<option value="">Add Automation...</option>';
+    for (let key of keys) {
+      let info = window.pluginInfos[key];
+      let option = document.createElement("option");
+      option.value = key;
+      option.innerHTML = `${key} ➤ ${info.minValue} - ${info.maxValue}`;
+      automationSelector.appendChild(option);
+    }
+  });
+
+  automationSelector.addEventListener("input", (e) => {
+    const paramId = e.target.value;
+    const param = window.pluginInfos[paramId];
+    if (param) {
+      main.appendChild(new AutomationTrack(paramId, param));
+    }
   });
 })();
