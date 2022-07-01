@@ -47,14 +47,13 @@ const getCustomProcessor = (moduleId) => {
         childInfos.forEach((child, i) => {
           child = JSON.parse(JSON.stringify(child));
           const infos = Object.keys(child);
-          const pedalId = this.nodes[i].nodeId;
-          const pedalName = this.nodes[i].name;
+          const { name, nodeId, customId } = this.nodes[i];
 
           infos.forEach((key) => {
             let info = child[key];
-            info.pedalId = pedalId;
+            info.nodeId = nodeId;
             info.id = key;
-            this._parameterInfo[`n°${i} ${pedalName} -> ${info.id}`] = info;
+            this._parameterInfo[`n°${customId} ${name} -> ${info.id}`] = info;
           });
         });
 
@@ -77,7 +76,7 @@ const getCustomProcessor = (moduleId) => {
     async getParameterValues(normalized, parameterIdQuery) {
       let parameter = this._parameterInfo[parameterIdQuery];
       if (parameter) {
-        let value = await this.group.processors.get(parameter.pedalId).getParameterValues();
+        let value = await this.group.processors.get(parameter.nodeId).getParameterValues();
         return {
           [parameterIdQuery]: value[parameter.id],
         };
@@ -118,7 +117,7 @@ const getCustomProcessor = (moduleId) => {
         const { id, value } = data;
         var param = this._parameterInfo[id];
 
-        this.group.processors.get(param.pedalId).scheduleEvents({
+        this.group.processors.get(param.nodeId).scheduleEvents({
           type,
           time,
           data: { id: param.id, normalized: param.normalized, value },

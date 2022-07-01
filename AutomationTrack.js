@@ -42,6 +42,7 @@ export default class AutomationTrack extends HTMLElement {
     remove.id = "remove";
     remove.innerHTML = "❌";
     remove.addEventListener("click", () => {
+      window.pluginInfos[this.paramId].track = false;
       this.remove();
     });
 

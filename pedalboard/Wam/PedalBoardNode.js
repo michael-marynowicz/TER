@@ -200,8 +200,8 @@ export default class PedalBoardNode extends WamNode {
     this.port.postMessage({
       request: "set/nodes",
       content: {
-        nodes: Object.values(this.nodes).map((val) => {
-          return { name: val.name, nodeId: val.node.instanceId };
+        nodes: Object.entries(this.nodes).map(([key, value]) => {
+          return { name: value.name, nodeId: value.node.instanceId, customId: key };
         }),
       },
     });

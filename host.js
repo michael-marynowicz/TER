@@ -125,12 +125,19 @@ const mountPlugin = (domNode) => {
       option.innerHTML = `${key} ➤ ${info.minValue} - ${info.maxValue}`;
       automationSelector.appendChild(option);
     }
+
+    let useless = [];
+    for (let track of document.querySelectorAll("automation-track")) {
+      if (window.pluginInfos[track.paramId]?.nodeId != track.param.nodeId) useless.push(track);
+    }
+    useless.forEach((track) => track.remove());
   });
 
   automationSelector.addEventListener("input", (e) => {
     const paramId = e.target.value;
     const param = window.pluginInfos[paramId];
-    if (param) {
+    if (param && !param.track) {
+      param.track = true;
       main.appendChild(new AutomationTrack(paramId, param));
     }
   });
