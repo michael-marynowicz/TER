@@ -12,6 +12,7 @@ const automationSelector = document.getElementById("param-select");
 const download = document.getElementById("download");
 const upload = document.getElementById("upload");
 const input = document.getElementById("upload-input");
+const automationAll = document.getElementById("automation-all");
 
 inCache.setAttribute("data", localStorage.getItem("instanceState") != null);
 
@@ -131,6 +132,13 @@ const mountPlugin = (domNode) => {
     const param = window.pluginInfos[paramId];
     if (param) {
       main.appendChild(new AutomationTrack(paramId, param));
+    }
+  });
+
+  automationAll.addEventListener("click", () => {
+    window.instance.audioNode.clearEvents();
+    for (let track of document.querySelectorAll("automation-track")) {
+      track.scheduleEvents(false);
     }
   });
 })();

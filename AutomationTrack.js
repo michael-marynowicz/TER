@@ -36,22 +36,7 @@ export default class AutomationTrack extends HTMLElement {
 
     let apply = document.createElement("button");
     apply.innerHTML = "Apply automation";
-    apply.addEventListener("click", async () => {
-      let node = window.instance.audioNode;
-      const audioCtx = node.context;
-      const { currentTime } = audioCtx;
-      node.clearEvents();
-      const currentValue = (await node.getParameterValues(false, this.paramId))[this.paramId].value;
-      node.scheduleEvents({
-        type: "wam-automation",
-        data: { id: this.paramId, value: currentValue },
-        time: currentTime,
-      });
-      for (let t = 0; t < this.domain; t += 0.01) {
-        const value = this.getYfromX(t);
-        node.scheduleEvents({ type: "wam-automation", data: { id: this.paramId, value }, time: currentTime + t });
-      }
-    });
+    apply.addEventListener("click", () => this.scheduleEvents());
 
     let remove = document.createElement("button");
     remove.id = "remove";
@@ -69,6 +54,43 @@ export default class AutomationTrack extends HTMLElement {
     this.body.appendChild(header);
   }
 
+  scheduleEvents(clear = true) {
+    let rect = this.canvas.getBoundingClientRect();
+    let step = rect.width / 100;
+    let node = window.instance.audioNode;
+    let { currentTime } = node.context;
+    if (clear) node.clearEvents();
+
+    if (this.points.length > 1) {
+      let x1 = this.points[0].x;
+      let y1 = this.points[0].y;
+      for (let i = 1; i < this.points.length; i++) {
+        let { x: x2, y: y2 } = this.points[i];
+        let m = (y2 - y1) / (x2 - x1);
+        let b = y2 - m * x2;
+
+        for (let x = x1; x < x2; x += step) {
+          let y = m * x + b;
+          let time = this.getTime(x, false);
+          let value = this.getValue(y, false);
+
+          node.scheduleEvents({
+            type: "wam-automation",
+            data: { id: this.paramId, value },
+            time: time + currentTime,
+          });
+        }
+        x1 = this.points[i].x;
+        y1 = this.points[i].y;
+      }
+    } else {
+      this.canvas.setAttribute("invalid", "");
+      setTimeout(() => {
+        this.canvas.removeAttribute("invalid");
+      }, 500);
+    }
+  }
+
   createCanvas() {
     this.canvas = document.createElement("canvas");
     this.canvas.width = "1500";
@@ -82,7 +104,7 @@ export default class AutomationTrack extends HTMLElement {
     ctx.strokeStyle = "white";
     ctx.font = "12px monospace";
 
-    let points = [];
+    this.points = [];
 
     this.canvas.addEventListener("mousedown", (e) => {
       e.preventDefault();
@@ -90,7 +112,7 @@ export default class AutomationTrack extends HTMLElement {
 
       if (type == 0) {
         let newPoint = true;
-        for (let point of points) {
+        for (let point of this.points) {
           if (point.x > x + 5) break;
           if (Math.hypot(point.x - x, point.y - y) < 10) {
             this.selected = point;
@@ -99,23 +121,23 @@ export default class AutomationTrack extends HTMLElement {
         }
 
         if (newPoint) {
-          points.push({ x, y });
+          this.points.push({ x, y });
         }
       }
       if (type == 2) {
-        for (let point of points) {
+        for (let point of this.points) {
           if (point.x > x + 5) {
             break;
           }
           if (Math.hypot(point.x - x, point.y - y) < 10) {
-            let index = points.indexOf(point);
-            points.splice(index, 1);
+            let index = this.points.indexOf(point);
+            this.points.splice(index, 1);
             break;
           }
         }
       }
 
-      points.sort((a, b) => a.x - b.x);
+      this.points.sort((a, b) => a.x - b.x);
     });
 
     this.canvas.addEventListener("mousemove", (e) => {
@@ -132,7 +154,7 @@ export default class AutomationTrack extends HTMLElement {
     const dropped = (e) => {
       e.preventDefault();
       this.selected = undefined;
-      points.sort((a, b) => a.x - b.x);
+      this.points.sort((a, b) => a.x - b.x);
     };
 
     this.canvas.addEventListener("mouseup", dropped);
@@ -148,7 +170,7 @@ export default class AutomationTrack extends HTMLElement {
 
       let prevX;
       let prevY;
-      for (let { x, y } of points) {
+      for (let { x, y } of this.points) {
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, 2 * Math.PI);
         ctx.fill();
@@ -186,14 +208,16 @@ export default class AutomationTrack extends HTMLElement {
     return { x, y, type };
   }
 
-  getTime(x) {
+  getTime(x, fixed = true) {
     let rect = this.canvas.getBoundingClientRect();
-    return ((x * this.input.value) / rect.width).toFixed(2);
+    let time = (x * this.input.value) / rect.width;
+    return fixed ? time.toFixed(2) : time;
   }
 
-  getValue(y) {
+  getValue(y, fixed = true) {
     let rect = this.canvas.getBoundingClientRect();
-    return ((y * (this.param.minValue - this.param.maxValue)) / rect.height + this.param.maxValue).toFixed(2);
+    let value = (y * (this.param.minValue - this.param.maxValue)) / rect.height + this.param.maxValue;
+    return fixed ? value.toFixed(2) : value;
   }
 
   setText(ctx, x, y) {
@@ -242,10 +266,17 @@ export default class AutomationTrack extends HTMLElement {
     h2 {
         margin: 0;
         margin-right: auto;
+        max-width: 70%;
     }
 
     input {
         width: 3rem;
+    }
+
+    input,
+    button,
+    label {
+      flex-shrink: 0;
     }
 
     #remove {
@@ -260,6 +291,30 @@ export default class AutomationTrack extends HTMLElement {
     canvas {
         background: black;
         border-top: 5px solid white;
+    }
+
+    canvas[invalid]{
+      border: 0px solid red;
+      animation: 0.5s invalid;
+      margin-top: 5px;
+    }
+
+    @keyframes invalid {
+      0% {
+        border-width: 0px;
+      }
+      25% {
+        border-width: 3px;
+      }
+      50% {
+        border-width: 0px;
+      }    
+      75% {
+        border-width: 3px;
+      }
+      100% {
+        border-width: 0px;
+      }
     }
     `;
     this.body.appendChild(style);

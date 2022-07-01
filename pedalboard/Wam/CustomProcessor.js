@@ -53,7 +53,8 @@ const getCustomProcessor = (moduleId) => {
           infos.forEach((key) => {
             let info = child[key];
             info.pedalId = pedalId;
-            this._parameterInfo[`n°${i} ${pedalName} -> ${info.label}`] = info;
+            info.id = key;
+            this._parameterInfo[`n°${i} ${pedalName} -> ${info.id}`] = info;
           });
         });
 
