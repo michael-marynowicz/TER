@@ -58,6 +58,7 @@ export default class AutomationTrack extends HTMLElement {
     let rect = this.canvas.getBoundingClientRect();
     let step = rect.width / 100;
     let node = window.instance.audioNode;
+    node.context.resume();
     let { currentTime } = node.context;
     if (clear) node.clearEvents();
 
