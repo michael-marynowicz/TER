@@ -17,6 +17,7 @@ export default class PedalBoardNode extends WamNode {
   nodes = {};
   pedalBoardInfos = {};
   lastParameterValue = {};
+  MAX_NODES = 30;
 
   constructor(plugin) {
     super(plugin, {
@@ -114,12 +115,18 @@ export default class PedalBoardNode extends WamNode {
    */
   cleanup(nodes, forced) {
     if (forced) {
+      Object.keys(this.nodes).forEach((el) => {
+        this.nodes[el].node.destroy();
+      });
       this.nodes = {};
       this.connectNodes([]);
     } else {
       let ids = Array.from(nodes).map((el) => el.id);
       Object.keys(this.nodes).forEach((el) => {
-        if (!ids.includes(el)) delete this.nodes[el];
+        if (!ids.includes(el)) {
+          this.nodes[el].node.destroy();
+          delete this.nodes[el];
+        }
       });
       this.connectNodes(nodes);
     }
@@ -197,10 +204,12 @@ export default class PedalBoardNode extends WamNode {
    * @author Quentin Beauchet
    */
   updateInfos() {
+    let nodes = Object.entries(this.nodes);
+
     this.port.postMessage({
       request: "set/nodes",
       content: {
-        nodes: Object.entries(this.nodes).map(([key, value]) => {
+        nodes: nodes.map(([key, value]) => {
           return { name: value.name, nodeId: value.node.instanceId, customId: key };
         }),
       },
@@ -210,5 +219,7 @@ export default class PedalBoardNode extends WamNode {
         detail: { data: this },
       })
     );
+
+    if (this.module?.gui) this.module.gui.setPreviewFullness(nodes.length >= this.MAX_NODES);
   }
 }

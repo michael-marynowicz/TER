@@ -94,12 +94,14 @@ export default class PedalBoardPlugin extends WebAudioModule {
   }
 
   async loadPreset(nodes) {
+    this.gui.loadingPreset = true;
     let board = this.gui.board;
     this.pedalboardNode.disconnectNodes(board.childNodes, true);
     board.innerHTML = "";
     for (let el of nodes) {
       await this.addWAM(el.name, el.state);
     }
+    this.gui.loadingPreset = false;
   }
 
   /**
@@ -111,6 +113,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
   async addWAM(WamName, state) {
     const { default: WAM } = this.WAMS[WamName].module;
     let instance = await WAM.createInstance(this.pedalboardNode.subGroupId, this.pedalboardNode.context);
+
     this.pedalboardNode.addPlugin(instance.audioNode, WamName, this.id);
     await this.gui.addPlugin(instance, this.WAMS[WamName].img, this.id);
     if (state) {

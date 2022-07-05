@@ -526,7 +526,9 @@ export default class pedalboardGui extends HTMLElement {
 
     let text = document.createElement("span");
     text.innerHTML = presetName;
-    const clickEventCallBack = () => this.displayPreset(bankNameCallBack, text.innerHTML);
+    const clickEventCallBack = () => {
+      if (!this.loadingPreset) this.displayPreset(bankNameCallBack, text.innerHTML);
+    };
     text.addEventListener("click", clickEventCallBack);
     el.append(text);
 
@@ -633,6 +635,19 @@ export default class pedalboardGui extends HTMLElement {
     img.addEventListener("click", callback);
     img.classList.add("listElementButton");
     return img;
+  }
+
+  /**
+   * Disable the preview when there is too much plugins on the PedalBoard
+   * @param {boolean} full
+   * @author Quentin Beauchet
+   */
+  setPreviewFullness(full) {
+    if (full) {
+      this.images.setAttribute("full", "");
+    } else {
+      this.images.removeAttribute("full");
+    }
   }
 
   /**

@@ -40,6 +40,12 @@ img {
   border-bottom: 0;
 }
 
+#preview > div[full] {
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+}
+
 #board {
   display: flex;
   align-items: flex-start;
