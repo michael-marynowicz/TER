@@ -265,7 +265,7 @@ export default class pedalboardGui extends HTMLElement {
     cross.src = this._crossIMGUrl;
     cross.setAttribute("crossorigin", "anonymous");
     cross.addEventListener("click", () => {
-      this._plug.pedalboardNode.disconnectNodes(this.board.childNodes, false, () => this.board.removeChild(wrapper));
+      this._plug.pedalboardNode.disconnectNodes(this.board.childNodes, false, () => wrapper.remove());
     });
     header.append(cross);
     wrapper.appendChild(gui);
@@ -492,7 +492,7 @@ export default class pedalboardGui extends HTMLElement {
    */
   deletePreset(bankNameCallBack, presetNameCallBack, node) {
     delete this.PresetsBank[bankNameCallBack()][presetNameCallBack()];
-    this.presets.removeChild(node);
+    node.remove();
   }
 
   /**
@@ -507,7 +507,7 @@ export default class pedalboardGui extends HTMLElement {
     } else {
       delete this.PresetsBank[bank];
       this.presets.innerHTML = "";
-      this.banks.removeChild(node);
+      node.remove();
     }
   }
 

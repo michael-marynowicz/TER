@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <script src="https://rawgit.com/paulirish/memory-stats.js/master/bookmarklet.js"></script>
   </head>
   <body>
     <audio
@@ -37,12 +38,13 @@
       const { default: initializeWamHost } = await import("../plugins/utils/sdk/src/initializeWamHost.js");
       const [hostGroupId] = await initializeWamHost(audioContext);
 
-      const { default: WAM } = await import("../../plugins/TS9_OverdriveFaustGenerated/index.js");
+      //const { default: WAM } = await import("../../plugins/TS9_OverdriveFaustGenerated/index.js");
+      const { default: WAM } = await import("https://mainline.i3s.unice.fr/wam2/packages/pingpongdelay/dist/index.js");
 
       let instances = [];
 
       let prev = { audioNode: mediaElementSource };
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 70; i++) {
         console.time(`n° ${i}`);
         const instance = await WAM.createInstance(hostGroupId, audioContext);
         prev.audioNode.connect(instance.audioNode);

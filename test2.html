@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <script src="https://rawgit.com/paulirish/memory-stats.js/master/bookmarklet.js"></script>
+  </head>
+  <body>
+    <audio
+      id="player"
+      src="https://mainline.i3s.unice.fr/WebAudioPluginBank/BasketCaseGreendayriffDI.mp3"
+      controls
+      loop
+      crossorigin="anonymous"
+    ></audio>
+    <button id="add">ADD</button>
+    <button id="loop">ADD WITH SET INTERVAL</button>
+    <h1 id="nbr">0</h1>
+    <div id="mount"></div>
+  </body>
+
+  <script>
+    const player = document.querySelector("#player");
+    const mount = document.querySelector("#mount");
+    const add = document.querySelector("#add");
+    const loop = document.querySelector("#loop");
+    const nbr = document.querySelector("#nbr");
+
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+      get: (searchParams, prop) => searchParams.get(prop),
+    });
+
+    // Safari...
+    const AudioContext =
+      window.AudioContext || // Default
+      window.webkitAudioContext || // Safari and old versions of Chrome
+      false;
+
+    const audioContext = new AudioContext();
+    const mediaElementSource = audioContext.createMediaElementSource(player);
+
+    (async () => {
+      // Init WamEnv
+      const { default: initializeWamHost } = await import("../plugins/utils/sdk/src/initializeWamHost.js");
+      const [hostGroupId] = await initializeWamHost(audioContext);
+
+      window.hostGroupId = hostGroupId;
+
+      add.addEventListener("click", () => {
+        setPlugin(params.plugin);
+      });
+
+      let looping = false;
+
+      loop.addEventListener("click", () => {
+        looping = !looping;
+      });
+
+      setInterval(() => {
+        if (looping) {
+          add.click();
+          nbr.innerHTML = parseInt(nbr.innerHTML) + 1;
+        }
+      }, 1000);
+
+      player.onplay = () => {
+        audioContext.resume(); // audio context must be resumed because browser restrictions
+      };
+    })();
+    let liveInputGainNode = audioContext.createGain();
+
+    let currentPluginDomNode;
+    let currentPluginAudioNode;
+
+    const setPlugin = async (pluginUrl) => {
+      const { default: WAM } = await import(pluginUrl);
+
+      const instance = await WAM.createInstance(window.hostGroupId, audioContext);
+      window.instance = instance;
+
+      connectPlugin(instance.audioNode);
+
+      audioContext.resume();
+
+      const pluginDomNode = await instance.createGui();
+
+      currentPluginDomNode = pluginDomNode;
+
+      mountPlugin(pluginDomNode);
+    };
+
+    const mountPlugin = (domNode) => {
+      mount.innerHTML = "";
+      mount.appendChild(domNode);
+    };
+
+    const connectPlugin = (audioNode) => {
+      if (currentPluginAudioNode) {
+        liveInputGainNode.disconnect();
+
+        if (currentPluginAudioNode.numberOfInputs) mediaElementSource.disconnect(currentPluginAudioNode);
+        currentPluginAudioNode.disconnect(audioContext.destination);
+        currentPluginAudioNode.destroy();
+        if (currentPluginDomNode) {
+          currentPluginAudioNode.module.destroyGui(currentPluginDomNode);
+          mount.innerHTML = "";
+          currentPluginDomNode = null;
+        }
+        currentPluginAudioNode = null;
+      }
+
+      if (audioNode.numberOfInputs) liveInputGainNode.connect(audioNode);
+      console.log("connected live input node to plugin node");
+
+      if (audioNode.numberOfInputs) mediaElementSource.connect(audioNode);
+      audioNode.connect(audioContext.destination);
+      currentPluginAudioNode = audioNode;
+    };
+  </script>
+</html>

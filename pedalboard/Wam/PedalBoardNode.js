@@ -63,7 +63,11 @@ export default class PedalBoardNode extends WamNode {
   }
 
   disconnect(destination, outputIndex, inputIndex) {
-    return this._output.disconnect(destination, outputIndex, inputIndex);
+    if (destination) {
+      return this._output.disconnect(destination, outputIndex, inputIndex);
+    } else {
+      return this._output.disconnect();
+    }
   }
 
   /**
@@ -95,10 +99,10 @@ export default class PedalBoardNode extends WamNode {
     this.lastNode = this._input;
     nodes.forEach((el) => {
       let audioNode = this.nodes[el.id].node;
-      this.lastNode.disconnect(audioNode);
+      this.lastNode.disconnect();
       this.lastNode = audioNode;
     });
-    this.lastNode.disconnect(this._output);
+    this.lastNode.disconnect();
 
     if (callback) {
       callback();
@@ -115,19 +119,20 @@ export default class PedalBoardNode extends WamNode {
    */
   cleanup(nodes, forced) {
     if (forced) {
-      Object.keys(this.nodes).forEach((el) => {
-        this.nodes[el].node.destroy();
-      });
+      for (let key in this.nodes) {
+        this.nodes[key].node.destroy();
+        delete this.nodes[key];
+      }
       this.nodes = {};
       this.connectNodes([]);
     } else {
       let ids = Array.from(nodes).map((el) => el.id);
-      Object.keys(this.nodes).forEach((el) => {
-        if (!ids.includes(el)) {
-          this.nodes[el].node.destroy();
-          delete this.nodes[el];
+      for (let key in this.nodes) {
+        if (!ids.includes(key)) {
+          this.nodes[key].node.destroy();
+          delete this.nodes[key];
         }
-      });
+      }
       this.connectNodes(nodes);
     }
   }
@@ -220,6 +225,8 @@ export default class PedalBoardNode extends WamNode {
       })
     );
 
-    if (this.module?.gui) this.module.gui.setPreviewFullness(nodes.length >= this.MAX_NODES);
+    if (this.module?.gui) {
+      this.module.gui.setPreviewFullness(nodes.length >= this.MAX_NODES || this.module.gui.loadingPreset);
+    }
   }
 }
