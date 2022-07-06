@@ -65,7 +65,7 @@ export default class pedalboardGui extends HTMLElement {
 
     return new Promise((resolve, reject) => {
       new ResizeObserver(function (entries) {
-        if (entries[0].contentRect.width == entries[0].target.baseWidth) {
+        if (Math.round(entries[0].contentRect.width) == entries[0].target.baseWidth) {
           this.disconnect();
           resolve(true);
         }

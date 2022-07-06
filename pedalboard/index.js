@@ -102,7 +102,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
     for (let el of nodes) {
       await this.addWAM(el.name, el.state);
     }
-    this.gui.setPreviewFullness(false);
+    this.gui.setPreviewFullness(nodes.length >= this.pedalboardNode.MAX_NODES);
     this.gui.loadingPreset = false;
   }
 
