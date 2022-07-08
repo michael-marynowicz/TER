@@ -22,7 +22,7 @@ const AudioContext =
   window.webkitAudioContext || // Safari and old versions of Chrome
   false;
 
-const audioContext = new AudioContext();
+const audioContext = new AudioContext({ latencyHint: "playback" });
 const mediaElementSource = audioContext.createMediaElementSource(player);
 
 // Very simple function to connect the plugin audionode to the host

@@ -15,14 +15,12 @@
       loop
       crossorigin="anonymous"
     ></audio>
-    <button id="del">DELETE</button>
     <div id="mount"></div>
   </body>
 
   <script>
     const player = document.querySelector("#player");
     const mount = document.querySelector("#mount");
-    const del = document.querySelector("#del");
 
     // Safari...
     const AudioContext =
@@ -38,38 +36,15 @@
       const { default: initializeWamHost } = await import("../plugins/utils/sdk/src/initializeWamHost.js");
       const [hostGroupId] = await initializeWamHost(audioContext);
 
-      //const { default: WAM } = await import("../../plugins/TS9_OverdriveFaustGenerated/index.js");
-      const { default: WAM } = await import("https://mainline.i3s.unice.fr/wam2/packages/pingpongdelay/dist/index.js");
+      const { default: WAM } = await import("../../plugins/TS9_OverdriveFaustGenerated/index.js");
+      // const { default: WAM } = await import("https://mainline.i3s.unice.fr/wam2/packages/pingpongdelay/dist/index.js");
 
-      let instances = [];
-
-      let prev = { audioNode: mediaElementSource };
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 90; i++) {
         console.time(`n° ${i}`);
         const instance = await WAM.createInstance(hostGroupId, audioContext);
-        prev.audioNode.connect(instance.audioNode);
-
-        const pluginDomNode = await instance.createGui();
-        mount.appendChild(pluginDomNode);
-
-        instances.push(instance);
-        prev = instance;
         console.timeEnd(`n° ${i}`);
+        instance.audioNode.destroy();
       }
-      prev.audioNode.connect(audioContext.destination);
-
-      del.addEventListener("click", () => {
-        let pre = { audioNode: mediaElementSource };
-        for (let instance of instances) {
-          instance.gui.remove();
-          pre.audioNode.disconnect(instance.audioNode);
-          instance.audioNode.destroy();
-          pre = instance;
-        }
-        instances = [];
-        nbr = 0;
-        mediaElementSource.connect(audioContext.destination);
-      });
 
       player.onplay = () => {
         audioContext.resume(); // audio context must be resumed because browser restrictions
