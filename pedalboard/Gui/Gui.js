@@ -119,6 +119,7 @@ export default class pedalboardGui extends HTMLElement {
         this.images.appendChild(this._plug.WAMS[el].img);
       });
     };
+
     select.addEventListener("change", (event) => refreshImages(event.target));
 
     Object.keys(keywords).forEach((key, index) => {
@@ -142,7 +143,27 @@ export default class pedalboardGui extends HTMLElement {
 
     refreshImages(select);
 
+    let error = document.createElement("div");
+    error.id = "WASMErrorMsg";
+
+    let slideShow = document.createElement("div");
+    error.appendChild(slideShow);
+
+    this.disableFaustPlugins = () => {
+      let msg = document.createElement("h4");
+      msg.innerHTML =
+        " Faust Plugins are disabled because the WASM memory is full. This is not the PedalBoard Fault. Reload the page if you want to use them.";
+      slideShow.appendChild(msg);
+      slideShow.appendChild(msg.cloneNode(true));
+      slideShow.appendChild(msg.cloneNode(true));
+
+      error.style.display = "inherit";
+
+      keywords["faust"].forEach((el) => this._plug.WAMS[el].img.setAttribute("disabled", ""));
+    };
+
     details.appendChild(summary);
+    details.appendChild(error);
     details.appendChild(preview);
     this.main.appendChild(details);
   }

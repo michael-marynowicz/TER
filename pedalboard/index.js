@@ -10,6 +10,7 @@ const getBasetUrl = (relativeURL) => {
   const baseURL = relativeURL.href.substring(0, relativeURL.href.lastIndexOf("/"));
   return baseURL;
 };
+
 export default class PedalBoardPlugin extends WebAudioModule {
   _baseURL = getBasetUrl(new URL(".", import.meta.url));
 
@@ -132,6 +133,7 @@ export default class PedalBoardPlugin extends WebAudioModule {
     if (state) {
       await instance.audioNode.setState(state);
     }
+    if (this.id == 100) this.gui.disableFaustPlugins();
     this.id++;
     return true;
   }

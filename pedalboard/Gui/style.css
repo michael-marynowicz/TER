@@ -40,10 +40,42 @@ img {
   border-bottom: 0;
 }
 
-#preview > div[full] {
+#preview > div[full],
+#preview > div > img[disabled] {
   opacity: 0.3;
   pointer-events: none;
   user-select: none;
+}
+
+#WASMErrorMsg {
+  display: none;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+#WASMErrorMsg > div {
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  animation: slide-left 10s linear infinite;
+}
+
+@keyframes slide-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-20%, 0, 0);
+  }
+}
+
+#WASMErrorMsg > div > h4 {
+  display: inline-block;
+  color: #ff4500;
+  margin: 0;
+  font-size: smaller;
+  padding-top: 0.5rem;
+  white-space: pre;
 }
 
 #board {
