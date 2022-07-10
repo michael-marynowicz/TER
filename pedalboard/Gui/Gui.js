@@ -1,6 +1,5 @@
 import Visualizer from "./Visualizer.js";
 import "../../../plugins/utils/webaudio-controls.js";
-import "../../../plugins/utils/DragDropTouch.js";
 
 /**
  * @param {URL} relativeURL
