@@ -43,7 +43,7 @@ const mountPlugin = (domNode) => {
   const [hostGroupId] = await initializeWamHost(audioContext);
 
   // Import WAM
-  const { default: WAM } = await import("./pedalboard/index.js");
+  const { default: WAM } = await import("./src/index.js");
   // Create a new instance of the plugin
   // You can can optionnally give more options such as the initial state of the plugin
   const instance = await WAM.createInstance(hostGroupId, audioContext);

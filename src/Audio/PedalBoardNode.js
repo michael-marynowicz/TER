@@ -1,6 +1,6 @@
 import WamNode from "../../../plugins/utils/sdk/src/WamNode.js";
 import addFunctionModule from "../../plugins/utils/sdk/src/addFunctionModule.js";
-import getCustomProcessor from "./CustomProcessor.js";
+import getCustomProcessor from "./CustomProcessor.js.js";
 
 export default class PedalBoardNode extends WamNode {
   /**
