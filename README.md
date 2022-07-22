@@ -49,3 +49,4 @@ Because the issues come from Faust IDE we can't, and we won't try to resolve it,
  * [The faust IDE that we uses to create plugins from DSP code](https://faustide.grame.fr/)
  * [The server were we host the PedalBoard and its plugins](https://wam-bank.herokuapp.com/) and the [source code](https://github.com/QuentinBeauchet/plugins_server_webaudiomodules) for the plugins
  * [The paper](https://zenodo.org/record/6769098) about our work we submitted for the [WAC2022](https://wac2022.i3s.univ-cotedazur.fr/)
+ * [The work of the TER-13 that we referenced multiples time in th project](https://github.com/TER-M1/wam-openstudio)
