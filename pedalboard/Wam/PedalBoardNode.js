@@ -29,6 +29,10 @@ export default class PedalBoardNode extends WamNode {
     this._supportedEventTypes.add("wam-info");
   }
 
+  /**
+   * Create the subGroup used by the plugins and initialize the PedalBoard hidden AudioNodes.
+   * @author Quentin Beauchet
+   */
   async _initialize() {
     await super._initialize();
     const { default: initializeWamHost } = await import("../../plugins/utils/sdk/src/initializeWamHost.js");

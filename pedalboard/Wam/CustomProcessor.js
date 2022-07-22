@@ -10,8 +10,22 @@ const getCustomProcessor = (moduleId) => {
       super(options);
     }
 
+    /**
+     * We need to override it because we want to manage
+     * this._parameterInfo manually do to the dynamic nature of the pedlaboard.
+     * @author Quentin Beauchet
+     */
     _initialize() {}
 
+    /**
+     * We copy the input to the output without altering anything.
+     * @param {number} startSample beginning of processing slice
+     * @param {number} endSample end of processing slice
+     * @param {Float32Array[][]} inputs
+     * @param {Float32Array[][]} outputs
+     * @param {{[x: string]: Float32Array}} parameters
+     * @author Quentin Beauchet
+     */
     _process(startSample, endSample, inputs, outputs) {
       const input = inputs[0];
       const output = outputs[0];
@@ -83,6 +97,17 @@ const getCustomProcessor = (moduleId) => {
       }
     }
 
+    /**
+     * Manage the messages beetween the audioThread and the mainThread:
+     * - "set/init" is called only once and is needed to know the subGroup for the plugins.
+     * - "set/nodes" is called each team the order of the plugins on the Pedalboard is changed.
+     * - "get/parameterInfo" return to the mainThread informations about a plugin parameter informations.
+     * - "get/parameterValues"  return to the mainThread informations about a plugin parameter values.
+     * - "add/event" add and event to the EventQueue, mainly used for automation.
+     * For all other type of messages the method from WamProcessor is called.
+     * @param {*} message
+     * @author Quentin Beauchet
+     */
     async _onMessage(message) {
       const { id, request, content } = message.data;
       if (request == "set/init") {
@@ -125,6 +150,10 @@ const getCustomProcessor = (moduleId) => {
       });
     }
 
+    /**
+     * Clear the events of all the plugins on the PedalBoard.
+     * @author Quentin Beauchet
+     */
     clearEvents() {
       for (let node of this.nodes) {
         this.group.processors.get(node.nodeId).clearEvents();
